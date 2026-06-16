@@ -2,6 +2,7 @@ import { Response, Request } from "express";
 import { CourseService } from "../services/courseService";
 import { Readable } from "stream";
 import { AuthenticatedRequest } from "../middleware/authMiddleWare";
+import multer from "multer";
 
 export const uploadCourse = async (
   req: AuthenticatedRequest,

@@ -9,6 +9,8 @@
   "author": "devyinka",
   "license": "ISC",
   "dependencies": {
+    "@grpc/grpc-js": "^1.14.4",
+    "@hyperledger/fabric-gateway": "^1.11.0",
     "@supabase/supabase-js": "^2.107.0",
     "@tensorflow/tfjs-node": "^4.22.0",
     "@vladmandic/face-api": "^1.7.15",
