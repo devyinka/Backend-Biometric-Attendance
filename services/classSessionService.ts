@@ -21,7 +21,7 @@ export const SessionService = {
       ? courseData[0].course_code
       : courseData.course_code;
 
-    // tell the ESP32 to start class session by sending the course code`
+    //activate ESP32 to start class session by sending the course code`
     const payload = JSON.stringify({
       command: "StartSession",
       course: extractedCourseCode,
@@ -59,9 +59,42 @@ export const SessionService = {
       throw error;
     }
 
-    // Hardware Logic: Tell the ESP32 to go to get back to idle state by sending the end session command
     const payload = JSON.stringify({ command: "endSession" });
     mqttClient.publish("end_class", payload);
+
+    try {
+      //Fetch enrolled students from 'student_courses'
+      const { data: enrolledStudents } = await Database.from("student_courses")
+        .select("student_id")
+        .eq("course_id", session.course_id);
+
+      // Fetch successfully scanned students
+      const { data: presentLogs } = await Database.from("attendance_logs")
+        .select("student_id")
+        .eq("course_id", session.course_id)
+        .gte("created_at", session.created_at)
+        .lte("created_at", session.ended_at);
+
+      if (enrolledStudents && presentLogs) {
+        const presentIds = presentLogs.map((log) => log.student_id);
+
+        //  Filter to find the missing students
+        const absentRecords = enrolledStudents
+          .filter((enrolled) => !presentIds.includes(enrolled.student_id))
+          .map((missingStudent) => ({
+            student_id: missingStudent.student_id,
+            course_id: session.course_id,
+            status: "absent",
+          }));
+
+        //  Bulk insert missing students
+        if (absentRecords.length > 0) {
+          await Database.from("attendance_logs").insert(absentRecords);
+        }
+      }
+    } catch (ghostDataError) {
+      console.error("Failed to generate absent records:", ghostDataError);
+    }
 
     return session;
   },

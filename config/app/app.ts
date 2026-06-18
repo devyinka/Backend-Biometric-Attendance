@@ -12,8 +12,11 @@ import enrollmentRoute from "../../Routes/enrollmentRoute";
 import courseRoute from "../../Routes/courseRoute";
 import studentRoute from "../../Routes/studentRoute";
 import classSessionRoute from "../../Routes/classSessionRoute";
-import markingAttendanceRoute from "../../Routes/markingAttendanceRoute";
+import markingAttendanceRoute from "../../Routes/attendanceRoute";
 import userRouter from "../../Routes/userRouter";
+import AttendanceRoute, {
+  GetAttendanceHistory,
+} from "../../Routes/attendanceRoute";
 
 export const app = express();
 
@@ -25,7 +28,7 @@ app.use("/", registerRoute);
 app.use("/", sendEmailandPassword);
 app.use("/", updatePasswordRoute);
 app.use("/", kioskRoute);
-app.use("/", markingAttendanceRoute);
+app.use("/", AttendanceRoute);
 
 // Apply authentication middleware globally for all routes after this point
 app.use(requireAuth);
@@ -38,3 +41,4 @@ app.use("/", courseRoute);
 app.use("/", studentRoute);
 app.use("/", classSessionRoute);
 app.use("/", userRouter);
+app.use("/", GetAttendanceHistory);

@@ -2,7 +2,7 @@ import { Database } from "../config/database/connectdatabase";
 import { BlockchainGateway } from "../gateWay/blockChainGateWay";
 import { faceService } from "./faceService";
 
-export const AttendanceTaking = {
+export const Attendance = {
   markLiveAttendance: async (
     liveImageBuffer: Buffer,
     fingerprintSlot: number,
@@ -57,7 +57,7 @@ export const AttendanceTaking = {
     };
   },
 
-  // PIPELINE B: OFFLINE BATCH SYNC
+  // This function is designed to handle offline attendance marking from the ESP32 device.
   markOfflineAttendance: async (
     scans: { slot: number; timestamp: string }[],
     courseId: string,
@@ -153,6 +153,90 @@ export const AttendanceTaking = {
         successful: successCount,
         duplicatesIgnored: duplicateCount,
         failed: failedCount,
+      },
+    };
+  },
+
+  getAttendanceHistory: async (
+    courseId: string,
+    month: string | number,
+    year: number,
+    userId: string,
+    page: number = 1,
+    limit: number = 50,
+  ) => {
+    const { data: profile, error: profileError } = await Database.from(
+      "user_profiles",
+    )
+      .select("role")
+      .eq("id", userId)
+      .single();
+
+    if (profileError || !profile) {
+      throw new Error("UNAUTHORIZED_USER");
+    }
+
+    const userRole = profile.role;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    // Everyone gets these base columns
+    let selectQuery = `
+      id,
+      created_at,
+      status,
+      tx_hash,
+      student_id
+    `;
+
+    // Only attach the heavy profile join if a lecturer is requesting it
+    if (userRole === "lecturer") {
+      selectQuery += `, user_profiles ( full_name, matric_number, profile_image )`;
+    }
+
+    // BASE QUERY
+    let query = Database.from("attendance_logs")
+      .select(selectQuery, { count: "exact" })
+      .eq("course_id", courseId)
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    //  SECURITY FILTER
+    if (userRole === "student") {
+      query = query.eq("student_id", userId);
+    }
+
+    //  DATE FILTER
+    if (month !== "all") {
+      const parsedMonth = typeof month === "string" ? parseInt(month) : month;
+      const startDate = new Date(year, parsedMonth - 1, 1).toISOString();
+      const endDate = new Date(
+        year,
+        parsedMonth,
+        0,
+        23,
+        59,
+        59,
+        999,
+      ).toISOString();
+
+      query = query.gte("created_at", startDate).lte("created_at", endDate);
+    }
+
+    // EXECUTE
+    const { data, error, count } = await query;
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return {
+      records: data,
+      pagination: {
+        totalItems: count || 0,
+        currentPage: page,
+        itemsPerPage: limit,
+        totalPages: Math.ceil((count || 0) / limit),
       },
     };
   },
