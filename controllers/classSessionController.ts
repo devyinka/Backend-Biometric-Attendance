@@ -20,7 +20,6 @@ export const startSession = async (
   }
 
   const { courseId } = req.body;
-
   try {
     const session = await SessionService.startSession(courseId);
     res

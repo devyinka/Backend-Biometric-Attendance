@@ -19,7 +19,6 @@ export const uploadCourse = async (
       .json({ error: "Unauthorized: Only lecturers can upload courses" });
     return;
   }
-
   try {
     if (!req.file) {
       res.status(400).json({ error: "No file uploaded" });

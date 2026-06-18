@@ -6,7 +6,6 @@ import {
   getAttendanceHistory,
 } from "../controllers/attendanceController";
 import { upload } from "../middleware/uploadImageMiddleware";
-import { get } from "https";
 
 const AttendanceRoute = Router();
 

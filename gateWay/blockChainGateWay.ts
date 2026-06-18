@@ -14,6 +14,10 @@ import * as path from "path";
 let gatewayConnection: any = null;
 let blockchainContract: Contract | null = null;
 
+const HYPERLEDGERENDPOINT = process.env.HLF_PEER_ENDPOINT!;
+const HYPERLEDGERCHANNELNAME = process.env.HLF_CHANNEL_NAME;
+const HYPERLEDGERCHAINCODENAME = process.env.HLF_CHAINCODE_NAME;
+
 const getBlockchainConnection = async () => {
   if (blockchainContract) return blockchainContract; // Return existing connection
 
@@ -34,7 +38,7 @@ const getBlockchainConnection = async () => {
   const signer: Signer = signers.newPrivateKeySigner(privateKey);
 
   const client = new grpc.Client(
-    process.env.HLF_PEER_ENDPOINT!,
+    HYPERLEDGERENDPOINT!,
     grpc.credentials.createSsl(tlsRootCert),
   );
 
@@ -46,8 +50,8 @@ const getBlockchainConnection = async () => {
     submitOptions: () => ({ deadline: Date.now() + 5000 }),
   });
 
-  const network = gateway.getNetwork(process.env.HLF_CHANNEL_NAME!);
-  blockchainContract = network.getContract(process.env.HLF_CHAINCODE_NAME!);
+  const network = gateway.getNetwork(HYPERLEDGERCHANNELNAME!);
+  blockchainContract = network.getContract(HYPERLEDGERCHAINCODENAME!);
 
   return blockchainContract;
 };

@@ -2,7 +2,6 @@ import { Response } from "express";
 import { StudentService } from "../services/studentServices";
 import { AuthenticatedRequest } from "../middleware/authMiddleWare";
 
-
 export const getAvailableCourses = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -13,14 +12,12 @@ export const getAvailableCourses = async (
     res.status(401).json({ error: "Unauthorized: Please log in first" });
     return;
   }
-
   if (user.role !== "student") {
     res.status(403).json({
       error: "Unauthorized: Only students can view the course catalog",
     });
     return;
   }
-
   try {
     const result = await StudentService.getAvailableCourses(user.id);
 
@@ -36,8 +33,6 @@ export const getAvailableCourses = async (
       .json({ error: error.message || "Failed to fetch available courses" });
   }
 };
-
-
 
 export const registerCourses = async (
   req: AuthenticatedRequest,
