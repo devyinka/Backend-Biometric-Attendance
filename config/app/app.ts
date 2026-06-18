@@ -13,6 +13,7 @@ import courseRoute from "../../Routes/courseRoute";
 import studentRoute from "../../Routes/studentRoute";
 import classSessionRoute from "../../Routes/classSessionRoute";
 import markingAttendanceRoute from "../../Routes/markingAttendanceRoute";
+import userRouter from "../../Routes/userRouter";
 
 export const app = express();
 
@@ -36,3 +37,4 @@ app.use("/", enrollmentRoute);
 app.use("/", courseRoute);
 app.use("/", studentRoute);
 app.use("/", classSessionRoute);
+app.use("/", userRouter);
