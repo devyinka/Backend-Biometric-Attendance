@@ -12,7 +12,6 @@ import enrollmentRoute from "../../Routes/enrollmentRoute";
 import courseRoute from "../../Routes/courseRoute";
 import studentRoute from "../../Routes/studentRoute";
 import classSessionRoute from "../../Routes/classSessionRoute";
-import markingAttendanceRoute from "../../Routes/attendanceRoute";
 import userRouter from "../../Routes/userRouter";
 import AttendanceRoute, {
   GetAttendanceHistory,
@@ -29,11 +28,10 @@ app.use("/", sendEmailandPassword);
 app.use("/", updatePasswordRoute);
 app.use("/", kioskRoute);
 app.use("/", AttendanceRoute);
+app.use("/", loginRoute);
 
 // Apply authentication middleware globally for all routes after this point
 app.use(requireAuth);
-app.use("/", loginRoute);
-
 // Aplly Role base acess for lecturer and student routes
 app.use(requireLecturer);
 app.use("/", enrollmentRoute);
