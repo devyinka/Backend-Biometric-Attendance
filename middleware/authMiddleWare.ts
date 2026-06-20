@@ -46,7 +46,7 @@ export const requireAuth = async (
 };
 
 // Middleware to restrict access to lecturers only
-export const requireLecturer = (
+export const requireLecturerorstudent = (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction,

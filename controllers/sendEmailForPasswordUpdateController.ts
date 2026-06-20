@@ -1,4 +1,4 @@
-import {AuthService} from "../services/authentcationServices";
+import { AuthService } from "../services/authentcationServices";
 export const sendEmailForPasswordUpdate = async (req: any, res: any) => {
   try {
     const { email } = req.body;

@@ -55,9 +55,9 @@ export const AuthService = {
     return {
       email: data.user?.email || "",
       role: data.user?.user_metadata.role || "",
-      matricNumber: data.user?.user_metadata.matric_number || "",
-      phoneNumber: data.user?.user_metadata.phone_number || "",
-      fullName: data.user?.user_metadata.full_name || "",
+      matricNumber: data.user?.user_metadata.matricNumber || "",
+      phoneNumber: data.user?.user_metadata.phoneNumber || "",
+      fullName: data.user?.user_metadata.fullName || "",
       token: data.session?.access_token || "",
     };
   },
