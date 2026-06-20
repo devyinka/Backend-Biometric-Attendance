@@ -12,16 +12,18 @@ export const AuthService = {
     fullName,
   }: User): Promise<Response> => {
     //check matric number either it has exist
-    const { data: existingMatricNumber, error: matricError } =
-      await Database.from("user_profiles")
-        .select("matric_number")
-        .eq("matric_number", matricNumber)
-        .maybeSingle();
-    if (matricError) {
-      throw new Error(matricError.message);
-    }
-    if (existingMatricNumber) {
-      throw new Error("Matric number already exists");
+    if (role === "student") {
+      const { data: existingMatricNumber, error: matricError } =
+        await Database.from("user_profiles")
+          .select("matric_number")
+          .eq("matric_number", matricNumber)
+          .maybeSingle();
+      if (matricError) {
+        throw new Error(matricError.message);
+      }
+      if (existingMatricNumber) {
+        throw new Error("Matric number already exists");
+      }
     }
 
     //check email either it has exist
@@ -82,9 +84,9 @@ export const AuthService = {
     return {
       email: data.user?.email || "",
       role: data.user?.user_metadata.role || "",
-      matricNumber: data.user?.user_metadata.matricNumber || "",
-      phoneNumber: data.user?.user_metadata.phoneNumber || "",
-      fullName: data.user?.user_metadata.fullName || "",
+      matricNumber: data.user?.user_metadata.matric_number || "",
+      phoneNumber: data.user?.user_metadata.phone_number || "",
+      fullName: data.user?.user_metadata.full_name || "",
       token: data.session?.access_token || "",
     };
   },

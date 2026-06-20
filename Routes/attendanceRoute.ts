@@ -9,11 +9,7 @@ import { upload } from "../middleware/uploadImageMiddleware";
 
 const AttendanceRoute = Router();
 
-AttendanceRoute.post(
-  "/mark-live",
-  upload.single("liveImage"),
-  markLiveAttendance,
-);
+AttendanceRoute.post("/mark-live", upload.single("face"), markLiveAttendance);
 
 AttendanceRoute.post("/mark-offline", markOfflineAttendance);
 

@@ -8,17 +8,17 @@ export const markLiveAttendance = async (
 ): Promise<void> => {
   try {
     const { fingerprintSlot, courseId } = req.body;
-    const liveImageBuffer = req.file?.buffer;
+    const face = req.file?.buffer;
 
     const fingerprintSlotInt = parseInt(fingerprintSlot, 10); // Ensure fingerprintSlot is an integer
 
-    if (isNaN(fingerprintSlotInt) || !courseId || !liveImageBuffer) {
+    if (isNaN(fingerprintSlotInt) || !courseId || !face) {
       res.status(400).json({ error: "Missing required data" });
       return;
     }
 
     const result = await Attendance.markLiveAttendance(
-      liveImageBuffer,
+      face,
       fingerprintSlotInt,
       courseId,
     );

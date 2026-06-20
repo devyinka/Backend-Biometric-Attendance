@@ -1,22 +1,25 @@
-import { Database } from "../config/database/connectdatabase";
+import {
+  Database,
+  DatabasewithHardware,
+} from "../config/database/connectdatabase";
 import { BlockchainGateway } from "../gateWay/blockChainGateWay";
 import { faceService } from "./faceService";
 
 export const Attendance = {
   markLiveAttendance: async (
-    liveImageBuffer: Buffer,
+    face: Buffer,
     fingerprintSlot: number,
     courseId: string,
   ) => {
     // using fingerprint to lookup student
-    const { data: student } = await Database.from("biometrics")
+    const { data: student } = await DatabasewithHardware.from("biometrics")
       .select("student_id, face_vector, user_profiles(full_name)")
       .eq("fingerprint_slot", fingerprintSlot)
       .single();
     if (!student) throw new Error("UNREGISTERED_FINGERPRINT");
 
     //face verification with the face store
-    const liveFaceArray = await faceService.facedetection(liveImageBuffer);
+    const liveFaceArray = await faceService.facedetection(face);
     const isMatch = await faceService.verifyFace(
       student.face_vector,
       liveFaceArray,

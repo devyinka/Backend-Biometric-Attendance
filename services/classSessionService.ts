@@ -1,4 +1,7 @@
-import { Database } from "../config/database/connectdatabase";
+import {
+  Database,
+  DatabasewithHardware,
+} from "../config/database/connectdatabase";
 import { mqttClient } from "../config/MQTT/mqtt";
 
 export const SessionService = {
@@ -34,8 +37,10 @@ export const SessionService = {
 
   getActiveSession: async (courseId: string): Promise<any> => {
     const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
-    const { data: session, error } = await Database.from("class_sessions")
-      .select("id, course_id, courses(course_code)")
+    const { data: session, error } = await DatabasewithHardware.from(
+      "class_sessions",
+    )
+      .select("id, course_id, courses!course_id(course_code)")
       .eq("course_id", courseId)
       .eq("session_date", today) // Filter by today's date
       .eq("status", "active")
@@ -48,7 +53,7 @@ export const SessionService = {
     return session;
   },
 
-  endSession: async (sessionId: string): Promise<any> => {
+  endSession: async (sessionId: string, course_code: string): Promise<any> => {
     const { data: session, error } = await Database.from("class_sessions")
       .update({ status: "closed", ended_at: new Date().toISOString() })
       .eq("id", sessionId)
@@ -59,7 +64,10 @@ export const SessionService = {
       throw error;
     }
 
-    const payload = JSON.stringify({ command: "endSession" });
+    const payload = JSON.stringify({
+      command: "endSession",
+      course: course_code,
+    });
     mqttClient.publish("end_class", payload);
 
     try {
