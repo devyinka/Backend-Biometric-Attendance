@@ -11,6 +11,33 @@ export const AuthService = {
     phoneNumber,
     fullName,
   }: User): Promise<Response> => {
+    //check matric number either it has exist
+    const { data: existingMatricNumber, error: matricError } =
+      await Database.from("user_profiles")
+        .select("matric_number")
+        .eq("matric_number", matricNumber)
+        .maybeSingle();
+    if (matricError) {
+      throw new Error(matricError.message);
+    }
+    if (existingMatricNumber) {
+      throw new Error("Matric number already exists");
+    }
+
+    //check email either it has exist
+    const { data: existingEmail, error: emailError } = await Database.from(
+      "user_profiles",
+    )
+      .select("email")
+      .eq("email", email)
+      .maybeSingle();
+    if (emailError) {
+      throw new Error(emailError.message);
+    }
+    if (existingEmail) {
+      throw new Error("Email already exists");
+    }
+
     const { data, error } = await withRetry(() =>
       Database.auth.signUp({
         email,

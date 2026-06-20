@@ -4,10 +4,6 @@ import { uploadCourse } from "../controllers/courseController";
 
 const courseRoute = Router();
 
-courseRoute.post(
-  "/upload-course",
-  uploadCSV.single("courseFile"),
-  uploadCourse,
-);
+courseRoute.post("/upload-course", uploadCSV.single("file"), uploadCourse);
 
 export default courseRoute;

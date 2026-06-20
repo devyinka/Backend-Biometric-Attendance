@@ -4,10 +4,6 @@ import { submitBiometrics } from "../controllers/kioskController";
 
 const kioskRoute = Router();
 
-kioskRoute.post(
-  "/submit-biometrics",
-  upload.single("faceImage"),
-  submitBiometrics,
-);
+kioskRoute.post("/submit-biometrics", upload.single("file"), submitBiometrics);
 
 export default kioskRoute;

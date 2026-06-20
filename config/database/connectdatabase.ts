@@ -5,3 +5,8 @@ export const Database = createClient(
   process.env.SUPA_BASE_URL as string,
   process.env.PUBLISHABLE_SUPA_BASE_API_KEY as string,
 );
+
+export const DatabasewithHardware = createClient(
+  process.env.SUPA_BASE_URL as string,
+  process.env.SUPA_BASE_API_KEY as string,
+);
