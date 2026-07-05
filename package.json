@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -p tsconfig.json",
     "start": "node server.ts",
-    "dev": "nodemon --watch . --ext ts,tsx,json --exec \"ts-node server.ts\""
+    "dev": "cross-env PORT=5000 nodemon --watch . --ext ts,tsx,json --exec \"ts-node server.ts\""
   },
   "author": "devyinka",
   "license": "ISC",
@@ -30,7 +30,6 @@
     "@types/express": "^5.0.6",
     "@types/multer": "^2.1.0",
     "@types/node": "^25.9.2",
-    "cross-env": "^10.1.0",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"

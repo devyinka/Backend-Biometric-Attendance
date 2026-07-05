@@ -36,7 +36,7 @@ app.use("/", updatePasswordRoute);
 app.use(requireLecturerorstudent);
 app.use("/", enrollmentRoute);
 app.use("/", courseRoute);
-app.use("/", studentRoute);
+app.use("/", studentRoute); // i  will test this
 app.use("/", classSessionRoute);
-app.use("/", userRouter);
-app.use("/", GetAttendanceHistory);
+app.use("/", userRouter); // i will test this too
+app.use("/", GetAttendanceHistory); // i will test this too
