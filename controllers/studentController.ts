@@ -75,3 +75,41 @@ export const registerCourses = async (
       .json({ error: error.message || "Failed to register for courses" });
   }
 };
+
+export const getAttendanceRecordsOfRegisteredCourses = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
+  const user = req.user;
+
+  if (!user) {
+    res.status(401).json({ error: "Unauthorized: Please log in first" });
+    return;
+  }
+
+  if (user.role !== "student") {
+    res.status(403).json({
+      error:
+        "Unauthorized: Only students can view attendance records of registered courses",
+    });
+    return;
+  }
+
+  try {
+    const result = await StudentService.getAttendanceRecordsOfRegisteredCourses(
+      user.id,
+    );
+
+    res.status(200).json({
+      message: "Successfully fetched attendance records",
+      data: result,
+    });
+  } catch (error: any) {
+    console.error("Fetch Attendance Records Error:", error);
+    res.status(500).json({
+      error:
+        error.message ||
+        "Failed to fetch attendance records of registered courses",
+    });
+  }
+};

@@ -1,7 +1,4 @@
-import {
-  Database,
-  DatabasewithHardware,
-} from "../config/database/connectdatabase";
+import { Database } from "../config/database/connectdatabase";
 
 export const StudentService = {
   getAvailableCourses: async (level: number): Promise<any> => {
@@ -41,6 +38,21 @@ export const StudentService = {
       throw error;
     }
 
+    return data;
+  },
+
+  getAttendanceRecordsOfRegisteredCourses: async (
+    studentId: string,
+  ): Promise<any> => {
+    const { data, error } = await Database.rpc(
+      "get_student_attendance_history",
+      {
+        p_student_id: studentId,
+      },
+    );
+    if (error) {
+      throw error;
+    }
     return data;
   },
 };
