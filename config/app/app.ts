@@ -1,5 +1,9 @@
 import express from "express";
 import cors from "cors";
+import compression from "compression";
+import morgan from "morgan";
+import cookieParser from "cookie-parser";
+import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import { requireAuth } from "../../middleware/authMiddleWare";
 import { requireLecturerorstudent } from "../../middleware/authMiddleWare";
@@ -19,9 +23,53 @@ import AttendanceRoute, {
 
 export const app = express();
 
-app.use(cors());
+// app.use(cors());
+// app.use(helmet());
+// app.use(express.json());
+
+// Configure CORS so the frontend and approved device origins can communicate safely.
+
+// Basic security headers (helmet) and gzip compression for better performance.
 app.use(helmet());
-app.use(express.json());
+app.use(compression());
+
+// Request logging in development for easier debugging.
+if (process.env.NODE_ENV !== "production") {
+  app.use(morgan("dev"));
+}
+
+// Parse incoming cookies and JSON/form bodies.
+app.use(cookieParser());
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: true }));
+
+const allowedOrigin = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : ["http://localhost:3000"];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigin.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  }),
+);
+
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 500,
+    standardHeaders: true,
+    legacyHeaders: false,
+  }),
+);
 
 app.use("/", registerRoute);
 app.use("/", loginRoute);
