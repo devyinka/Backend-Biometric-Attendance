@@ -10,9 +10,19 @@ export const registerUser = async (req: any, res: any) => {
       phoneNumber,
       fullName,
       staffKey,
+      department,
+      level,
     } = req.body;
 
-    if (!email || !password || !role || !phoneNumber || !fullName) {
+    if (
+      !email ||
+      !password ||
+      !role ||
+      !fullName ||
+      !phoneNumber ||
+      !department ||
+      !level
+    ) {
       return res.status(400).json({ error: "All fields are required" });
     }
     if (role === "student" && !matricNumber) {
@@ -96,8 +106,11 @@ export const registerUser = async (req: any, res: any) => {
       matricNumber,
       phoneNumber,
       fullName,
+      department,
+      level,
     });
-    res.status(201).json(response);
+    console.log("Registration Response:", response);
+    res.status(200).json(response);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }

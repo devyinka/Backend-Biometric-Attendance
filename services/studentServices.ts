@@ -1,35 +1,26 @@
-import { Database } from "../config/database/connectdatabase";
+import {
+  Database,
+  DatabasewithHardware,
+} from "../config/database/connectdatabase";
 
 export const StudentService = {
-  getAvailableCourses: async (studentId: string): Promise<any> => {
-    const { data: student, error: studentError } = await Database.from(
-      "user_profiles",
-    )
-      .select("level")
-      .eq("id", studentId)
-      .single();
-
-    if (studentError || !student) {
-      throw new Error("Could not fetch student profile to determine level.");
-    }
-
-    const currentLevel = student.level;
-
-    // Fetch courses at or below the student's current level, sorted by level and course code
+  getAvailableCourses: async (level: number): Promise<any> => {
     const { data: courses, error: courseError } = await Database.from("courses")
-      .select("*")
-      .lte("level", currentLevel)
+      .select("id, course_code, title, level, credits")
+      .lte("level", level)
       .order("level", { ascending: false })
       .order("course_code", { ascending: true });
 
     if (courseError) {
-      throw courseError;
+      throw new Error(courseError.message);
     }
-
-    // Return both so the Next.js frontend knows how to organize the UI
     return {
-      studentLevel: currentLevel,
-      courses: courses,
+      courses: courses.map((course) => ({
+        id: course.id,
+        code: course.course_code,
+        title: course.title,
+        credits: course.credits,
+      })),
     };
   },
 

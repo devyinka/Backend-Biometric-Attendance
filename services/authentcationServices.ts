@@ -10,8 +10,10 @@ export const AuthService = {
     matricNumber,
     phoneNumber,
     fullName,
+    department,
+    level,
   }: User): Promise<Response> => {
-    //check matric number either it has exist
+    //check matric number either it has existed
     if (role === "student") {
       const { data: existingMatricNumber, error: matricError } =
         await Database.from("user_profiles")
@@ -46,10 +48,13 @@ export const AuthService = {
         password,
         options: {
           data: {
+            email: email,
             role: role,
             matric_number: matricNumber,
             phone_number: phoneNumber,
             full_name: fullName,
+            department: department,
+            level: level,
           },
         },
       }),
@@ -58,11 +63,15 @@ export const AuthService = {
       throw new Error(error.message);
     }
     return {
+      id: data.user?.id || "",
       email: data.user?.email || "",
       role: data.user?.user_metadata.role || "",
       matricNumber: data.user?.user_metadata.matric_number || "",
       phoneNumber: data.user?.user_metadata.phone_number || "",
       fullName: data.user?.user_metadata.full_name || "",
+      imageprofile: data.user?.user_metadata.profile_image,
+      level: data.user?.user_metadata.level || "",
+      department: data.user?.user_metadata.department || "",
       token: data.session?.access_token || "",
     };
   },
@@ -82,11 +91,15 @@ export const AuthService = {
       throw new Error(error.message);
     }
     return {
+      id: data.user?.id || "",
       email: data.user?.email || "",
       role: data.user?.user_metadata.role || "",
       matricNumber: data.user?.user_metadata.matric_number || "",
       phoneNumber: data.user?.user_metadata.phone_number || "",
       fullName: data.user?.user_metadata.full_name || "",
+      level: data.user?.user_metadata.level || "",
+      department: data.user?.user_metadata.department || "",
+      imageprofile: data?.user?.user_metadata.profile_image || "",
       token: data.session?.access_token || "",
     };
   },

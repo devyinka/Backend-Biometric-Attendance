@@ -6,6 +6,7 @@ export interface AuthenticatedRequest extends Request {
     id: string;
     email: string;
     role: string;
+    level: number | string;
   };
 }
 
@@ -35,6 +36,7 @@ export const requireAuth = async (
       id: data.user.id,
       email: data.user.email || "",
       role: data.user.user_metadata.role || "student",
+      level: data.user.user_metadata.level || 100,
     };
 
     next();
@@ -55,10 +57,13 @@ export const requireLecturerorstudent = (
     res.status(401).json({ error: "Unauthorized: Please log in first" });
     return;
   }
-  if (req.user.role !== "lecturer") {
+  if (req.user.role !== "lecturer" && req.user.role !== "student") {
     res
       .status(403)
-      .json({ error: "Forbidden: Only lecturers can access this endpoint" });
+      .json({
+        error:
+          "Forbidden: Only lecturers and students can access this endpoint",
+      });
     return;
   }
   next();

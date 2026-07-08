@@ -5,15 +5,21 @@ export interface User {
   matricNumber: string;
   phoneNumber: string;
   fullName: string;
+  department: string;
+  level: string;
 }
 
 export interface Response {
+  id: string;
   email: string;
   role: string;
   matricNumber: string;
   phoneNumber: string;
   fullName: string;
   token: string;
+  imageprofile: string;
+  level: string;
+  department: string;
 }
 
 export interface Course {

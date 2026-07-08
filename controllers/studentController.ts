@@ -12,15 +12,17 @@ export const getAvailableCourses = async (
     res.status(401).json({ error: "Unauthorized: Please log in first" });
     return;
   }
+
   if (user.role !== "student") {
     res.status(403).json({
       error: "Unauthorized: Only students can view the course catalog",
     });
     return;
   }
-  try {
-    const result = await StudentService.getAvailableCourses(user.id);
 
+  try {
+    console.log("Fetching available courses for student level:", user.level);
+    const result = await StudentService.getAvailableCourses(Number(user.level));
     res.status(200).json({
       message: "Successfully fetched available courses",
       data: result.courses,
