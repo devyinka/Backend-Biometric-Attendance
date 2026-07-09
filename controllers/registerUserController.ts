@@ -21,7 +21,9 @@ export const registerUser = async (req: any, res: any) => {
       !fullName ||
       !phoneNumber ||
       !department ||
-      !level
+      (role === "student" && !level) ||
+      (role === "student" && !matricNumber) ||
+      (role === "lecturer" && !staffKey)
     ) {
       return res.status(400).json({ error: "All fields are required" });
     }

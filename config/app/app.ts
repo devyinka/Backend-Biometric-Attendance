@@ -23,12 +23,6 @@ import AttendanceRoute, {
 
 export const app = express();
 
-// app.use(cors());
-// app.use(helmet());
-// app.use(express.json());
-
-// Configure CORS so the frontend and approved device origins can communicate safely.
-
 // Basic security headers (helmet) and gzip compression for better performance.
 app.use(helmet());
 app.use(compression());
