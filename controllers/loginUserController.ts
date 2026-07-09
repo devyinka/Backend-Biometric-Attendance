@@ -5,6 +5,7 @@ import { AuthenticatedRequest } from "../middleware/authMiddleWare";
 export const loginUser = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { email, password, role } = req.body;
+    console.log(email, password, role);
     if (!email || !password) {
       return res.status(400).json({ error: "Email and password are required" });
     }
