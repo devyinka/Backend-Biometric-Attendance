@@ -26,6 +26,7 @@ export const getLecturerDashboardData = async (
       message: "Successfully fetched lecturer dashboard data",
       data: result,
     });
+    console.log("Lecturer Dashboard Data:", result);
   } catch (error: any) {
     console.error("Fetch Lecturer Dashboard Controller Error:", error);
 
