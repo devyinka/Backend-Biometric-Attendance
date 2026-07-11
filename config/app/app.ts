@@ -20,6 +20,7 @@ import userRouter from "../../Routes/userRouter";
 import AttendanceRoute, {
   GetAttendanceHistory,
 } from "../../Routes/attendanceRoute";
+import lecturerRouter from "../../Routes/lecturerRoute";
 
 export const app = express();
 
@@ -82,3 +83,4 @@ app.use("/", studentRoute); // i  will test this
 app.use("/", classSessionRoute);
 app.use("/", userRouter); // i will test this too
 app.use("/", GetAttendanceHistory); // i will test this too
+app.use("/", lecturerRouter);
