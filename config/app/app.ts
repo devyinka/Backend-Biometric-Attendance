@@ -23,6 +23,7 @@ import AttendanceRoute, {
 import lecturerRouter from "../../Routes/lecturerRoute";
 
 export const app = express();
+app.set("trust proxy", 1);
 
 // Basic security headers (helmet) and gzip compression for better performance.
 app.use(helmet());
