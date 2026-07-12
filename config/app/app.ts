@@ -23,6 +23,8 @@ import AttendanceRoute, {
 import lecturerRouter from "../../Routes/lecturerRoute";
 
 export const app = express();
+
+// ADD THIS LINE: Tell Express to trust Render's load balancer
 app.set("trust proxy", 1);
 
 // Basic security headers (helmet) and gzip compression for better performance.
@@ -66,6 +68,8 @@ app.use(
     legacyHeaders: false,
   }),
 );
+
+// ... (the rest of your routes remain exactly the same)
 
 app.use("/", registerRoute);
 app.use("/", loginRoute);
