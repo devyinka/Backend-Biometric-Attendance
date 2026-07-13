@@ -87,4 +87,4 @@ app.use("/", classSessionRoute);
 app.use("/", userRouter); // i will test this too
 app.use("/", GetAttendanceHistory); // i will test this too
 app.use("/", lecturerRouter);
-app.use("/", getsemesterAttendanceHistory); // i will test this too
+app.use("/", getsemesterAttendanceHistory);
