@@ -243,4 +243,16 @@ export const Attendance = {
       },
     };
   },
+
+  getsemesterReport: async (courseId: string) => {
+    const { data, error } = await Database.rpc("get_semester_attendance", {
+      p_course_id: courseId,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  },
 };

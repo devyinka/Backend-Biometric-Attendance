@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { AuthenticatedRequest } from "../middleware/authMiddleWare";
 import { Attendance } from "../services/attendanceService";
+import { Any } from "@tensorflow/tfjs-node";
 
 export const markLiveAttendance = async (
   req: Request,
@@ -103,6 +104,51 @@ export const getAttendanceHistory = async (
     res.status(500).json({
       status: "failed",
       error: error.message || "Internal server error fetching logs",
+    });
+  }
+};
+
+export const getSemesterReport = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
+  const User = req.user;
+  if (!User) {
+    res.status(401).json({ error: "Unauthorized: Please log in first" });
+    return;
+  }
+  if (User.role !== "lecturer") {
+    res.status(403).json({
+      error: "Forbidden: you must be a lecturer to get Semester Report",
+    });
+    return;
+  }
+  try {
+    const { courseId } = req.params;
+    if (!courseId) {
+      res.status(400).json({
+        error: "Missing required parameter: courseId",
+      });
+      return;
+    }
+    const Result = await Attendance.getsemesterReport(courseId as string);
+    res.status(200).json({
+      status: "success",
+      data: Result,
+    });
+  } catch (error: any) {
+    console.error("Semester Report Fetch Error:", error);
+
+    if (error.message === "UNAUTHORIZED_USER") {
+      res.status(403).json({
+        status: "failed",
+        error: "Access denied. Invalid user identification.",
+      });
+      return;
+    }
+    res.status(500).json({
+      status: "failed",
+      error: error.message || "Internal server error fetching semester report",
     });
   }
 };
