@@ -13,11 +13,9 @@ export const UpadteProfilephoto = async (
       return;
     }
     if (User.role !== "student") {
-      res
-        .status(403)
-        .json({
-          error: "Unauthorized: Only students can update profile photo",
-        });
+      res.status(403).json({
+        error: "Unauthorized: Only students can update profile photo",
+      });
       return;
     }
 
