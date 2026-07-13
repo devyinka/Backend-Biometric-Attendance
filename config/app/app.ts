@@ -19,12 +19,12 @@ import classSessionRoute from "../../Routes/classSessionRoute";
 import userRouter from "../../Routes/userRouter";
 import AttendanceRoute, {
   GetAttendanceHistory,
+  getsemesterAttendanceHistory,
 } from "../../Routes/attendanceRoute";
 import lecturerRouter from "../../Routes/lecturerRoute";
 
 export const app = express();
 
-// ADD THIS LINE: Tell Express to trust Render's load balancer
 app.set("trust proxy", 1);
 
 // Basic security headers (helmet) and gzip compression for better performance.
@@ -69,8 +69,6 @@ app.use(
   }),
 );
 
-// ... (the rest of your routes remain exactly the same)
-
 app.use("/", registerRoute);
 app.use("/", loginRoute);
 app.use("/", sendEmailandPassword);
@@ -89,3 +87,4 @@ app.use("/", classSessionRoute);
 app.use("/", userRouter); // i will test this too
 app.use("/", GetAttendanceHistory); // i will test this too
 app.use("/", lecturerRouter);
+app.use("/", getsemesterAttendanceHistory); // i will test this too
