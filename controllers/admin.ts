@@ -19,6 +19,7 @@ export const getAllStudents = async (
   try {
     const students = await AdminService.getAllStudents();
     res.status(200).json(students);
+    console.log("students response", students);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

@@ -82,16 +82,15 @@ app.use("/", AttendanceRoute);
 // Apply authentication middleware globally for all routes after this point
 app.use(requireAuth);
 app.use("/", updatePasswordRoute);
-// Aplly Role base acess for lecturer and student routes
-app.use(requireLecturerorstudent);
-app.use("/", courseRoute);
-app.use("/", studentRoute); // i  will test this
-app.use("/", classSessionRoute);
-app.use("/", userRouter); // i will test this too
-app.use("/", GetAttendanceHistory); // i will test this too
-app.use("/", lecturerRouter);
-app.use("/", getsemesterAttendanceHistory);
 
-app.use(requireAdmin);
-app.use("/", enrollmentRoute);
-app.use("/", getAllStudentsRoute);
+// Aplly Role base acess for lecturer and student routes
+app.use("/", requireLecturerorstudent, courseRoute);
+app.use("/", requireLecturerorstudent, studentRoute);
+app.use("/", requireLecturerorstudent, classSessionRoute);
+app.use("/", requireLecturerorstudent, userRouter);
+app.use("/", requireLecturerorstudent, GetAttendanceHistory);
+app.use("/", requireLecturerorstudent, lecturerRouter);
+app.use("/", requireLecturerorstudent, getsemesterAttendanceHistory);
+
+app.use("/", requireAdmin, enrollmentRoute);
+app.use("/", requireAdmin, getAllStudentsRoute);

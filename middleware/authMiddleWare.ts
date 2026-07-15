@@ -57,9 +57,14 @@ export const requireLecturerorstudent = (
     res.status(401).json({ error: "Unauthorized: Please log in first" });
     return;
   }
-  if (req.user.role !== "lecturer" && req.user.role !== "student") {
+  if (
+    req.user.role !== "lecturer" &&
+    req.user.role !== "student" &&
+    req.user.role !== "admin"
+  ) {
     res.status(403).json({
-      error: "Forbidden: Only lecturers and students can access this endpoint",
+      error:
+        "Forbidden: Only lecturers, students, and admins can access this endpoint",
     });
     return;
   }
