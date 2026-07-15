@@ -32,10 +32,12 @@ export const registerUser = async (req: any, res: any) => {
         .status(400)
         .json({ error: "Matric number is required for students" });
     }
-    if (role !== "student" && role !== "lecturer") {
+    if (role !== "student" && role !== "lecturer" && role !== "admin") {
       return res
         .status(400)
-        .json({ error: "Invalid role. Must be 'student' or 'lecturer'" });
+        .json({
+          error: "Invalid role. Must be 'student', 'lecturer', or 'admin'",
+        });
     }
     if (!/^\d{11}$/.test(phoneNumber)) {
       return res
