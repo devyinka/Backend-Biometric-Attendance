@@ -5,14 +5,18 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-import { requireAuth } from "../../middleware/authMiddleWare";
-import { requireLecturerorstudent } from "../../middleware/authMiddleWare";
+import {
+  requireAuth,
+  requireLecturerorstudent,
+  requireAdmin,
+} from "../../middleware/authMiddleWare";
+
 import loginRoute from "../../Routes/loginRoute";
 import registerRoute from "../../Routes/registerRoute";
 import sendEmailandPassword from "../../Routes/sendEmailandPassword";
 import updatePasswordRoute from "../../Routes/updatePassword";
 import kioskRoute from "../../Routes/kioskRoute";
-import enrollmentRoute from "../../Routes/enrollmentRoute";
+import enrollmentRoute, { getAllStudentsRoute } from "../../Routes/admin";
 import courseRoute from "../../Routes/courseRoute";
 import studentRoute from "../../Routes/studentRoute";
 import classSessionRoute from "../../Routes/classSessionRoute";
@@ -80,7 +84,6 @@ app.use(requireAuth);
 app.use("/", updatePasswordRoute);
 // Aplly Role base acess for lecturer and student routes
 app.use(requireLecturerorstudent);
-app.use("/", enrollmentRoute);
 app.use("/", courseRoute);
 app.use("/", studentRoute); // i  will test this
 app.use("/", classSessionRoute);
@@ -88,3 +91,7 @@ app.use("/", userRouter); // i will test this too
 app.use("/", GetAttendanceHistory); // i will test this too
 app.use("/", lecturerRouter);
 app.use("/", getsemesterAttendanceHistory);
+
+app.use(requireAdmin);
+app.use("/", enrollmentRoute);
+app.use("/", getAllStudentsRoute);
