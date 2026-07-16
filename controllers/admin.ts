@@ -162,3 +162,31 @@ export const getAllLecturers = async (
     res.status(500).json({ error: "Failed to fetch lecturers" });
   }
 };
+
+export const getAllCourses = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const User = req.user;
+  if (!User) {
+    return res.status(401).json({ error: "Unauthorized: Please log in first" });
+  }
+  if (User.role !== "admin") {
+    return res
+      .status(403)
+      .json({
+        error:
+          "Unauthorized: Only admins can view all the courses in the database",
+      });
+  }
+
+  try {
+    const courses = await AdminService.getAllCourses();
+    res.status(200).json(courses);
+
+    console.log(`Successfully fetched ${courses.length} courses for dashboard`);
+  } catch (error: any) {
+    console.error("Error fetching courses:", error);
+    res.status(500).json({ error: error.message || "Failed to fetch courses" });
+  }
+};

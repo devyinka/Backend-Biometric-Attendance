@@ -18,7 +18,8 @@ import updatePasswordRoute from "../../Routes/updatePassword";
 import kioskRoute from "../../Routes/kioskRoute";
 import enrollmentRoute, {
   getAllStudentsRoute,
-  getAllLecturer,
+  getAllLecturerRoute,
+  getAllCoursesRoute,
   createCourseRoute,
 } from "../../Routes/admin";
 import courseRoute from "../../Routes/courseRoute";
@@ -99,5 +100,6 @@ app.use("/", requireLecturerorstudent, getsemesterAttendanceHistory);
 app.use("/", requireAdmin, enrollmentRoute);
 app.use("/", requireAdmin, getAllStudentsRoute);
 app.use("/", requireAdmin, courseRoute);
-app.use("/", requireAdmin, getAllLecturer);
+app.use("/", requireAdmin, getAllLecturerRoute);
+app.use("/", requireAdmin, getAllCoursesRoute);
 app.use("/", requireAdmin, createCourseRoute);
