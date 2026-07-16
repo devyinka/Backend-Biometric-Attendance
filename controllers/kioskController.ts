@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { DatabasewithHardware } from "../config/database/connectdatabase";
+import { AdminDatabase } from "../config/database/connectdatabase";
 import { faceService } from "../services/faceService";
 import multer from "multer";
 
@@ -16,11 +16,12 @@ export const submitBiometrics = async (req: Request, res: Response) => {
       return;
     }
 
-    const { data: student, error: studentError } =
-      await DatabasewithHardware.from("user_profiles")
-        .select("id")
-        .eq("matric_number", matricNumber)
-        .maybeSingle();
+    const { data: student, error: studentError } = await AdminDatabase.from(
+      "user_profiles",
+    )
+      .select("id")
+      .eq("matric_number", matricNumber)
+      .maybeSingle();
 
     if (studentError || !student) {
       res
@@ -31,7 +32,7 @@ export const submitBiometrics = async (req: Request, res: Response) => {
 
     const faceVector = await faceService.facedetection(file.buffer);
 
-    const { error: insertError } = await DatabasewithHardware.from(
+    const { error: insertError } = await AdminDatabase.from(
       "biometrics",
     ).insert({
       student_id: student.id,

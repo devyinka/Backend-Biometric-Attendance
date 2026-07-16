@@ -1,7 +1,4 @@
-import {
-  Database,
-  DatabasewithHardware,
-} from "../config/database/connectdatabase";
+import { Database, AdminDatabase } from "../config/database/connectdatabase";
 import { BlockchainGateway } from "../gateWay/blockChainGateWay";
 import { faceService } from "./faceService";
 
@@ -12,7 +9,7 @@ export const Attendance = {
     courseId: string,
   ) => {
     // using fingerprint to lookup student
-    const { data: student } = await DatabasewithHardware.from("biometrics")
+    const { data: student } = await AdminDatabase.from("biometrics")
       .select("student_id, face_vector, user_profiles(full_name)")
       .eq("fingerprint_slot", fingerprintSlot)
       .single();

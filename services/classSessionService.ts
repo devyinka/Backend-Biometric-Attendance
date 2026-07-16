@@ -1,7 +1,4 @@
-import {
-  Database,
-  DatabasewithHardware,
-} from "../config/database/connectdatabase";
+import { Database, AdminDatabase } from "../config/database/connectdatabase";
 import { mqttClient } from "../config/MQTT/mqtt";
 
 export const SessionService = {
@@ -37,9 +34,7 @@ export const SessionService = {
 
   getActiveSession: async (courseId: string): Promise<any> => {
     const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
-    const { data: session, error } = await DatabasewithHardware.from(
-      "class_sessions",
-    )
+    const { data: session, error } = await AdminDatabase.from("class_sessions")
       .select("id, course_id, courses!course_id(course_code)")
       .eq("course_id", courseId)
       .eq("session_date", today) // Filter by today's date

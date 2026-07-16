@@ -16,7 +16,11 @@ import registerRoute from "../../Routes/registerRoute";
 import sendEmailandPassword from "../../Routes/sendEmailandPassword";
 import updatePasswordRoute from "../../Routes/updatePassword";
 import kioskRoute from "../../Routes/kioskRoute";
-import enrollmentRoute, { getAllStudentsRoute } from "../../Routes/admin";
+import enrollmentRoute, {
+  getAllStudentsRoute,
+  getAllLecturer,
+  createCourseRoute,
+} from "../../Routes/admin";
 import courseRoute from "../../Routes/courseRoute";
 import studentRoute from "../../Routes/studentRoute";
 import classSessionRoute from "../../Routes/classSessionRoute";
@@ -94,3 +98,6 @@ app.use("/", requireLecturerorstudent, getsemesterAttendanceHistory);
 
 app.use("/", requireAdmin, enrollmentRoute);
 app.use("/", requireAdmin, getAllStudentsRoute);
+app.use("/", requireAdmin, courseRoute);
+app.use("/", requireAdmin, getAllLecturer);
+app.use("/", requireAdmin, createCourseRoute);
