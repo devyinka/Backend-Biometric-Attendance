@@ -172,12 +172,10 @@ export const getAllCourses = async (
     return res.status(401).json({ error: "Unauthorized: Please log in first" });
   }
   if (User.role !== "admin") {
-    return res
-      .status(403)
-      .json({
-        error:
-          "Unauthorized: Only admins can view all the courses in the database",
-      });
+    return res.status(403).json({
+      error:
+        "Unauthorized: Only admins can view all the courses in the database",
+    });
   }
 
   try {
@@ -188,5 +186,32 @@ export const getAllCourses = async (
   } catch (error: any) {
     console.error("Error fetching courses:", error);
     res.status(500).json({ error: error.message || "Failed to fetch courses" });
+  }
+};
+
+export const updateCourseSettings = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const User = req.user;
+
+  if (!User || User.role !== "admin") {
+    return res.status(403).json({ error: "Unauthorized." });
+  }
+
+  try {
+    const courseId = req.params.id;
+    const { lecturerId, schedules } = req.body;
+
+    await AdminService.updateCourseSettings(
+      courseId as string,
+      lecturerId,
+      schedules,
+    );
+
+    res.status(200).json({ message: "Course settings saved successfully" });
+  } catch (error: any) {
+    console.error("Save Course Error:", error);
+    res.status(500).json({ error: error.message || "Failed to save changes" });
   }
 };

@@ -21,6 +21,7 @@ import enrollmentRoute, {
   getAllLecturerRoute,
   getAllCoursesRoute,
   createCourseRoute,
+  updateCourseSettingsRoute,
 } from "../../Routes/admin";
 import courseRoute from "../../Routes/courseRoute";
 import studentRoute from "../../Routes/studentRoute";
@@ -103,3 +104,4 @@ app.use("/", requireAdmin, courseRoute);
 app.use("/", requireAdmin, getAllLecturerRoute);
 app.use("/", requireAdmin, getAllCoursesRoute);
 app.use("/", requireAdmin, createCourseRoute);
+app.use("/", requireAdmin, updateCourseSettingsRoute);

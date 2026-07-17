@@ -119,4 +119,51 @@ export const AdminService = {
 
     return formattedCourses || [];
   },
+
+  updateCourseSettings: async (
+    courseId: string,
+    lecturerId: string,
+    schedules: any[],
+  ) => {
+    try {
+      await AdminDatabase.from("course_assignments")
+        .delete()
+        .eq("course_id", courseId);
+
+      if (lecturerId && lecturerId !== "unassigned") {
+        const { error: assignError } = await AdminDatabase.from(
+          "course_assignments",
+        ).insert({ course_id: courseId, lecturer_id: lecturerId });
+
+        if (assignError) {
+          console.error("[ASSIGNMENT DB ERROR]:", assignError.message);
+          throw new Error("Database failed to assign lecturer.");
+        }
+      }
+
+      await AdminDatabase.from("timetables").delete().eq("course_id", courseId);
+      if (schedules && schedules.length > 0) {
+        const slotsToInsert = schedules.map((slot) => ({
+          course_id: courseId,
+          day_of_week: slot.day_of_week,
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          venue: slot.venue,
+        }));
+
+        const { error: timeError } =
+          await AdminDatabase.from("timetables").insert(slotsToInsert);
+
+        if (timeError) {
+          console.error("[TIMETABLE DB ERROR]:", timeError.message);
+          throw new Error("Database failed to save timetable slots.");
+        }
+      }
+
+      return true;
+    } catch (error: any) {
+      console.error("[UPDATE COURSE FATAL ERROR]:", error.message);
+      throw error;
+    }
+  },
 };
