@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { AuthenticatedRequest } from "../middleware/authMiddleWare";
 import { Attendance } from "../services/attendanceService";
-import { Any } from "@tensorflow/tfjs-node";
 
 export const markLiveAttendance = async (
   req: Request,
@@ -11,7 +10,7 @@ export const markLiveAttendance = async (
     const { fingerprintSlot, courseId } = req.body;
     const face = req.file?.buffer;
 
-    const fingerprintSlotInt = parseInt(fingerprintSlot, 10); // Ensure fingerprintSlot is an integer
+    const fingerprintSlotInt = parseInt(fingerprintSlot, 10);
 
     if (isNaN(fingerprintSlotInt) || !courseId || !face) {
       res.status(400).json({ error: "Missing required data" });

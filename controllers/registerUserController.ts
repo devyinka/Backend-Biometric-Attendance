@@ -33,11 +33,9 @@ export const registerUser = async (req: any, res: any) => {
         .json({ error: "Matric number is required for students" });
     }
     if (role !== "student" && role !== "lecturer" && role !== "admin") {
-      return res
-        .status(400)
-        .json({
-          error: "Invalid role. Must be 'student', 'lecturer', or 'admin'",
-        });
+      return res.status(400).json({
+        error: "Invalid role. Must be 'student', 'lecturer', or 'admin'",
+      });
     }
     if (!/^\d{11}$/.test(phoneNumber)) {
       return res
@@ -67,6 +65,15 @@ export const registerUser = async (req: any, res: any) => {
       !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)
     ) {
       return res.status(400).json({ error: "the email format is not correct" });
+    }
+    if (
+      role === "lecturer" &&
+      /^[a-z]+\.[a-z]\d{7}@st\.futminna\.edu\.ng$/i.test(email)
+    ) {
+      return res.status(400).json({
+        error:
+          "Invalid email format for lecturers. Must not be in the student email format",
+      });
     }
 
     if (role === "lecturer") {

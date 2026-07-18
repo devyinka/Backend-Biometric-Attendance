@@ -114,7 +114,6 @@ export const AdminService = {
       enrollment_count: course.student_courses?.[0]?.count || 0,
     }));
 
-    // Clean up the raw join data for frontend to receives a clean object
     formattedCourses.forEach((c) => delete c.student_courses);
 
     return formattedCourses || [];

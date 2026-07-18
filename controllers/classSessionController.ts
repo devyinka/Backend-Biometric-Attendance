@@ -2,7 +2,6 @@ import { AuthenticatedRequest } from "../middleware/authMiddleWare";
 import { Response } from "express";
 import { SessionService } from "../services/classSessionService";
 
-// intercept class session start request by lecturer
 export const startSession = async (
   req: AuthenticatedRequest,
   res: Response,
