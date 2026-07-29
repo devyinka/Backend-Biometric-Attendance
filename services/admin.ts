@@ -107,7 +107,6 @@ export const AdminService = {
   },
 
   getAllCourses: async (): Promise<any> => {
-    // We select from courses and perform a "count" on the linked student_courses
     const { data: courses, error } = await AdminDatabase.from("courses")
       .select(
         `
