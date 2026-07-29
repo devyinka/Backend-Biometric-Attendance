@@ -16,12 +16,13 @@ import registerRoute from "../../Routes/registerRoute";
 import sendEmailandPassword from "../../Routes/sendEmailandPassword";
 import updatePasswordRoute from "../../Routes/updatePassword";
 import kioskRoute from "../../Routes/kioskRoute";
-import enrollmentRoute, {
+import {
   getAllStudentsRoute,
   getAllLecturerRoute,
   getAllCoursesRoute,
   createCourseRoute,
   updateCourseSettingsRoute,
+  getAdminDashboardStatsRoute,
 } from "../../Routes/admin";
 import courseRoute from "../../Routes/courseRoute";
 import studentRoute from "../../Routes/studentRoute";
@@ -32,6 +33,7 @@ import AttendanceRoute, {
   getsemesterAttendanceHistory,
 } from "../../Routes/attendanceRoute";
 import lecturerRouter from "../../Routes/lecturerRoute";
+import enrollmentRoute from "../../Routes/admin";
 
 export const app = express();
 
@@ -99,6 +101,7 @@ app.use("/", requireLecturerorstudent, lecturerRouter);
 app.use("/", requireLecturerorstudent, getsemesterAttendanceHistory);
 
 app.use("/", requireAdmin, enrollmentRoute);
+app.use("/", requireAdmin, getAdminDashboardStatsRoute);
 app.use("/", requireAdmin, getAllStudentsRoute);
 app.use("/", requireAdmin, courseRoute);
 app.use("/", requireAdmin, getAllLecturerRoute);

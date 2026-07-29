@@ -21,7 +21,7 @@ export const SessionService = {
       ? courseData[0].course_code
       : courseData.course_code;
 
-    //activate ESP32 to start class session by sending the course code`
+    //am using this to activate ESP32 to start class session by sending the course code`
     const payload = JSON.stringify({
       command: "StartSession",
       course: extractedCourseCode,

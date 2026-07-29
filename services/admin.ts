@@ -1,6 +1,19 @@
 import { AdminDatabase } from "../config/database/connectdatabase";
 
 export const AdminService = {
+  getAdminDashboardStats: async (): Promise<any> => {
+    const { data: stats, error } = await AdminDatabase.rpc(
+      "get_admin_dashboard_stats",
+    );
+
+    if (error) {
+      console.error("[SUPABASE ERROR]:", error.message);
+      throw new Error(error.message);
+    }
+
+    return stats || {};
+  },
+
   getAllStudents: async (): Promise<any> => {
     const { data: students, error } = await AdminDatabase.from("user_profiles")
       .select(

@@ -7,10 +7,10 @@ export const markLiveAttendance = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const { fingerprintSlot, courseId } = req.body;
+    const { fingerPrintSlot, courseId } = req.body;
     const face = req.file?.buffer;
 
-    const fingerprintSlotInt = parseInt(fingerprintSlot, 10);
+    const fingerprintSlotInt = parseInt(fingerPrintSlot, 10);
 
     if (isNaN(fingerprintSlotInt) || !courseId || !face) {
       res.status(400).json({ error: "Missing required data" });

@@ -59,7 +59,7 @@ export const Attendance = {
 
   // This function is designed to handle offline attendance marking from the ESP32 device.
   markOfflineAttendance: async (
-    scans: { slot: number; timestamp: string }[],
+    scans: { slot: number; timeStamp: string }[],
     courseId: string,
   ) => {
     // Get ALL sessions for this course (so I can check timestamps)
@@ -81,7 +81,7 @@ export const Attendance = {
     // Loop through every offline scan the ESP32 sent
     for (const scan of scans) {
       try {
-        const scanTime = new Date(scan.timestamp).getTime();
+        const scanTime = new Date(scan.timeStamp).getTime();
 
         //  Find which session this scan belongs to based on the timestamp
         const targetSession = sessions.find((s) => {

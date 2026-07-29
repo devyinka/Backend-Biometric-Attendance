@@ -1,4 +1,4 @@
-import { Database } from "../config/database/connectdatabase"; // Adjust this import path to point to your Supabase setup
+import { Database } from "../config/database/connectdatabase";
 
 export class LecturerService {
   static async getLecturerDashboard(lecturerId: string): Promise<any> {

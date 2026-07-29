@@ -3,6 +3,27 @@ import { AuthenticatedRequest } from "../middleware/authMiddleWare";
 import { AdminService } from "../services/admin";
 import { mqttClient } from "../config/MQTT/mqtt";
 
+export const getAdminDashboardStats = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const User = req.user;
+  if (!User) {
+    return res.status(401).json({ error: "Unauthorized: Please log in first" });
+  }
+  if (User.role !== "admin") {
+    return res
+      .status(403)
+      .json({ error: "Unauthorize: Only admins can view dashboard stats" });
+  }
+  try {
+    const stats = await AdminService.getAdminDashboardStats();
+    res.status(200).json(stats);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const getAllStudents = async (
   req: AuthenticatedRequest,
   res: Response,

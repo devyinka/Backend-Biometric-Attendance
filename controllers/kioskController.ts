@@ -6,10 +6,10 @@ import multer from "multer";
 // Controller to handle biometric data submission from the kiosk, its general route.
 export const submitBiometrics = async (req: Request, res: Response) => {
   try {
-    const { matricNumber, fingerprintSlot } = req.body;
-    const file = req.file as Express.Multer.File;
+    const { matricNumber, fingerPrintSlot } = req.body;
+    const face = req.file as Express.Multer.File;
 
-    if (!matricNumber || fingerprintSlot === undefined || !file) {
+    if (!matricNumber || fingerPrintSlot === undefined || !face) {
       res
         .status(400)
         .json({ error: "Missing required biometric data or image file." });
@@ -30,13 +30,13 @@ export const submitBiometrics = async (req: Request, res: Response) => {
       return;
     }
 
-    const faceVector = await faceService.facedetection(file.buffer);
+    const faceVector = await faceService.facedetection(face.buffer);
 
     const { error: insertError } = await AdminDatabase.from(
       "biometrics",
     ).insert({
       student_id: student.id,
-      fingerprint_slot: parseInt(fingerprintSlot, 10),
+      fingerprint_slot: parseInt(fingerPrintSlot, 10),
       face_vector: faceVector,
     });
 
