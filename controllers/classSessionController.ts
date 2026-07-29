@@ -86,11 +86,15 @@ export const endSession = async (
       .json({ error: "Unauthorized: Only lecturers can end class sessions" });
     return;
   }
+  const { sessionId } = req.body;
 
-  const { sessionId, course_code } = req.body;
+  if (!sessionId) {
+    res.status(400).json({ error: "sessionId is required to end a session." });
+    return;
+  }
 
   try {
-    const session = await SessionService.endSession(sessionId, course_code);
+    const session = await SessionService.endSession(sessionId);
     res
       .status(200)
       .json({ message: "Class session ended successfully", session });
