@@ -1,5 +1,6 @@
 import { Database, AdminDatabase } from "../config/database/connectdatabase";
 import { BlockchainGateway } from "../gateWay/blockChainGateWay";
+import { SolanaService } from "./solanaService";
 import { faceService } from "./faceService";
 
 export const Attendance = {
@@ -33,17 +34,18 @@ export const Attendance = {
       .single();
     if (!session) throw new Error("NO_ACTIVE_SESSION");
 
-    // Get the Blockchain Receipt (Hyperledger)
-    const txHash = await BlockchainGateway.recordAttendance(
+    //get the blockchain signature on solana
+    const signature = await SolanaService.recordAttendance(
       student.student_id,
       session.id,
     );
+
     // Save the Attendance + Blockchain_receipt to Database
     await Database.from("attendance_logs").insert({
       student_id: student.student_id,
       session_id: session.id,
       method: "face_and_fingerprint",
-      tx_hash: txHash,
+      tx_hash: signature,
     });
 
     const profileData: any = student.user_profiles;
@@ -53,11 +55,11 @@ export const Attendance = {
     return {
       status: "success",
       message: `Attendance marked for ${studentName}`,
-      txHash: txHash,
+      txHash: signature,
     };
   },
 
-  // This function is designed to handle offline attendance marking from the ESP32 device.
+  //this is for offline attendance, where the ESP32 sends a batch of scans to the server for processing
   markOfflineAttendance: async (
     scans: { slot: number; timeStamp: string }[],
     courseId: string,
@@ -86,7 +88,6 @@ export const Attendance = {
         //  Find which session this scan belongs to based on the timestamp
         const targetSession = sessions.find((s) => {
           const start = new Date(s.started_at).getTime();
-          // If ended_at is null (class didn't close properly), use current time as fallback
           const end = s.ended_at ? new Date(s.ended_at).getTime() : Date.now();
           return scanTime >= start && scanTime <= end;
         });
@@ -107,8 +108,7 @@ export const Attendance = {
           continue;
         }
 
-        //SECURITY: Prevent Double-Marking
-        // If the ESP32 glitches and sends the same array twice, do not hit the blockchain again.
+        //Prevent Double-Marking If the ESP32 glitches and sends the same array twice, do not hit the blockchain again.
         const { data: existingLog } = await Database.from("attendance_logs")
           .select("id")
           .eq("student_id", student.student_id)
@@ -121,7 +121,7 @@ export const Attendance = {
         }
 
         //  Get the Blockchain Receipt (Hyperledger)
-        const txHash = await BlockchainGateway.recordAttendance(
+        const signature = await SolanaService.recordAttendance(
           student.student_id,
           targetSession.id,
         );
@@ -131,7 +131,7 @@ export const Attendance = {
           student_id: student.student_id,
           session_id: targetSession.id,
           method: "fingerprint_offline",
-          tx_hash: txHash,
+          tx_hash: signature,
         });
 
         successCount++;
