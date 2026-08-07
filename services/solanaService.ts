@@ -11,9 +11,9 @@ import {
 const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL || clusterApiUrl("devnet");
 const connection = new Connection(SOLANA_RPC_URL, "confirmed");
 
-// Official Solana Memo Program ID
+// Official Solana Memo Program ID (SPL Memo v2)
 const MEMO_PROGRAM_ID = new PublicKey(
-  "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGtFCY",
+  "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr",
 );
 
 const getPayerKeypair = (): Keypair => {
