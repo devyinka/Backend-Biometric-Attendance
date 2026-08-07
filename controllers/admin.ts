@@ -60,7 +60,7 @@ export const enrollStudent = async (
       .json({ error: "Unauthorize: Only admins can enroll students" });
   }
   try {
-    const { matricNumber, studentId } = req.body;
+    const { matricNumber, studentId, command } = req.body;
     if (!matricNumber) {
       return res.status(400).json({ error: "Matric number is required" });
     }
@@ -71,7 +71,7 @@ export const enrollStudent = async (
     mqttClient.publish(
       "enrollment",
       JSON.stringify({
-        command: "enroll",
+        command: command, // "start" or "end"
         matricNumber: matricNumber,
         studentId: studentId,
       }),
