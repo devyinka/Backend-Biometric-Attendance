@@ -112,7 +112,27 @@ export const AuthService = {
       throw new Error(error.message);
     }
   },
-  updatePassword: async (newPassword: string): Promise<void> => {
+  setSession: async (
+    accessToken: string,
+    refreshToken?: string,
+  ): Promise<void> => {
+    const { error } = await Database.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken || "",
+    });
+    if (error) {
+      throw new Error(error.message);
+    }
+  },
+
+  updatePassword: async (
+    newPassword: string,
+    accessToken?: string,
+    refreshToken?: string,
+  ): Promise<void> => {
+    if (accessToken) {
+      await AuthService.setSession(accessToken, refreshToken);
+    }
     const { error } = await Database.auth.updateUser({
       password: newPassword,
     });
