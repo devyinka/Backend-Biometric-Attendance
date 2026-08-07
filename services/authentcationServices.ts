@@ -1,6 +1,7 @@
-import { Database } from "../config/database/connectdatabase";
+import { Database, AdminDatabase } from "../config/database/connectdatabase";
 import { User, Response } from "./type";
 import { withRetry } from "../utilities/withRetry";
+import { resolveProfileImageUrl } from "./userService";
 
 export const AuthService = {
   registerUser: async ({
@@ -69,6 +70,7 @@ export const AuthService = {
       matricNumber: data.user?.user_metadata.matric_number || "",
       phoneNumber: data.user?.user_metadata.phone_number || "",
       fullName: data.user?.user_metadata.full_name || "",
+      imageurl: data.user?.user_metadata.profile_image || "",
       imageprofile: data.user?.user_metadata.profile_image,
       level: data.user?.user_metadata.level || "",
       department: data.user?.user_metadata.department || "",
@@ -90,6 +92,26 @@ export const AuthService = {
     if (error) {
       throw new Error(error.message);
     }
+
+    const userId = data.user?.id;
+    let profileImageUrl = data.user?.user_metadata.profile_image || "";
+
+    if (userId) {
+      const { data: profileData, error: profileError } =
+        await AdminDatabase.from("user_profiles")
+          .select("profile_image")
+          .eq("id", userId)
+          .maybeSingle();
+
+      if (profileError) {
+        throw new Error(profileError.message);
+      }
+
+      profileImageUrl = profileData?.profile_image || profileImageUrl;
+    }
+
+    profileImageUrl = await resolveProfileImageUrl(profileImageUrl);
+
     return {
       id: data.user?.id || "",
       email: data.user?.email || "",
@@ -97,9 +119,10 @@ export const AuthService = {
       matricNumber: data.user?.user_metadata.matric_number || "",
       phoneNumber: data.user?.user_metadata.phone_number || "",
       fullName: data.user?.user_metadata.full_name || "",
+      imageurl: profileImageUrl,
       level: data.user?.user_metadata.level || "",
       department: data.user?.user_metadata.department || "",
-      imageprofile: data?.user?.user_metadata.profile_image || "",
+      imageprofile: profileImageUrl,
       token: data.session?.access_token || "",
     };
   },

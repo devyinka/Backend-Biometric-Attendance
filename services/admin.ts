@@ -1,4 +1,5 @@
 import { AdminDatabase } from "../config/database/connectdatabase";
+import { resolveProfileImageUrl } from "./userService";
 
 export const AdminService = {
   getAdminDashboardStats: async (): Promise<any> => {
@@ -35,15 +36,19 @@ export const AdminService = {
       throw new Error(error.message);
     }
 
-    const formattedStudents = (students || []).map((student) => ({
-      id: student.id,
-      matric_number: student.matric_number,
-      full_name: student.full_name,
-      department: student.department,
-      level: student.level,
-      profile_image: student.profile_image,
-      enrolled: student.biometrics && student.biometrics.length > 0,
-    }));
+    const formattedStudents = await Promise.all(
+      (students || []).map(async (student) => ({
+        id: student.id,
+        matric_number: student.matric_number,
+        full_name: student.full_name,
+        department: student.department,
+        level: student.level,
+        profile_image: await resolveProfileImageUrl(
+          student.profile_image || "",
+        ),
+        enrolled: student.biometrics && student.biometrics.length > 0,
+      })),
+    );
 
     return formattedStudents;
   },
