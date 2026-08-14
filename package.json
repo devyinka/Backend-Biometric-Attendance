@@ -12,8 +12,10 @@
   "author": "devyinka",
   "license": "ISC",
   "dependencies": {
+    "@coral-xyz/anchor": "^0.30.0",
     "@grpc/grpc-js": "^1.14.4",
     "@hyperledger/fabric-gateway": "^1.11.0",
+    "@solana/web3.js": "^1.91.0",
     "@supabase/supabase-js": "^2.107.0",
     "@tensorflow/tfjs-node": "^4.22.0",
     "@vladmandic/face-api": "^1.7.15",
