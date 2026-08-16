@@ -1,41 +1,48 @@
-import { Database, AdminDatabase } from '../config/database/connectdatabase';
-import { SolanaBlockchainGateway } from '../gateWay/solanaBlockchainGateway';
-import { faceService } from './faceService';
+import { Database, AdminDatabase } from "../config/database/connectdatabase";
+import { SolanaBlockchainGateway } from "../gateWay/solanaBlockchainGateway";
+import { faceService } from "./faceService";
 
 export const Attendance = {
-  markLiveAttendance: async (face: Buffer, fingerprintSlot: number, courseId: string) => {
-    const { data: student } = await AdminDatabase.from('biometrics')
-      .select('student_id, face_vector, user_profiles(full_name)')
-      .eq('fingerprint_slot', fingerprintSlot)
+  markLiveAttendance: async (
+    face: Buffer,
+    fingerprintSlot: number,
+    courseId: string,
+  ) => {
+    const { data: student } = await AdminDatabase.from("biometrics")
+      .select("student_id, face_vector, user_profiles(full_name)")
+      .eq("fingerprint_slot", fingerprintSlot)
       .single();
 
-    if (!student) throw new Error('UNREGISTERED_FINGERPRINT');
+    if (!student) throw new Error("UNREGISTERED_FINGERPRINT");
 
     const liveFaceArray = await faceService.facedetection(face);
-    const isMatch = await faceService.verifyFace(student.face_vector, liveFaceArray);
+    const isMatch = await faceService.verifyFace(
+      student.face_vector,
+      liveFaceArray,
+    );
 
     if (!isMatch) {
-      throw new Error('FACE_MISMATCH_REJECTED');
+      throw new Error("FACE_MISMATCH_REJECTED");
     }
 
-    const { data: session } = await Database.from('class_sessions')
-      .select('id')
-      .eq('course_id', courseId)
-      .eq('status', 'active')
+    const { data: session } = await Database.from("class_sessions")
+      .select("id")
+      .eq("course_id", courseId)
+      .eq("status", "active")
       .single();
 
-    if (!session) throw new Error('NO_ACTIVE_SESSION');
+    if (!session) throw new Error("NO_ACTIVE_SESSION");
 
     const txHash = await SolanaBlockchainGateway.recordAttendanceHash(
       student.student_id,
       session.id,
-      'face_and_fingerprint',
+      "face_and_fingerprint",
     );
 
-    await Database.from('attendance_logs').insert({
+    await Database.from("attendance_logs").insert({
       student_id: student.student_id,
       session_id: session.id,
-      method: 'face_and_fingerprint',
+      method: "face_and_fingerprint",
       tx_hash: txHash,
     });
 
@@ -45,20 +52,25 @@ export const Attendance = {
       : profileData.full_name;
 
     return {
-      status: 'success',
+      status: "success",
       message: `Attendance marked for ${studentName}`,
       txHash,
-      blockchainVerification: 'Hash recorded on Solana',
+      blockchainVerification: "Hash recorded on Solana",
     };
   },
 
-  markOfflineAttendance: async (scans: { slot: number; timeStamp: string }[], courseId: string) => {
-    const { data: sessions, error: sessionError } = await Database.from('class_sessions')
-      .select('id, started_at, ended_at')
-      .eq('course_id', courseId);
+  markOfflineAttendance: async (
+    scans: { slot: number; timeStamp: string }[],
+    courseId: string,
+  ) => {
+    const { data: sessions, error: sessionError } = await Database.from(
+      "class_sessions",
+    )
+      .select("id, started_at, ended_at")
+      .eq("course_id", courseId);
 
     if (sessionError || !sessions || sessions.length === 0) {
-      throw new Error('NO_SESSIONS_FOUND_FOR_COURSE');
+      throw new Error("NO_SESSIONS_FOUND_FOR_COURSE");
     }
 
     let successCount = 0;
@@ -81,9 +93,9 @@ export const Attendance = {
           continue;
         }
 
-        const { data: student } = await Database.from('biometrics')
-          .select('student_id')
-          .eq('fingerprint_slot', scan.slot)
+        const { data: student } = await Database.from("biometrics")
+          .select("student_id")
+          .eq("fingerprint_slot", scan.slot)
           .single();
 
         if (!student) {
@@ -91,10 +103,10 @@ export const Attendance = {
           continue;
         }
 
-        const { data: existingLog } = await Database.from('attendance_logs')
-          .select('id')
-          .eq('student_id', student.student_id)
-          .eq('session_id', targetSession.id)
+        const { data: existingLog } = await Database.from("attendance_logs")
+          .select("id")
+          .eq("student_id", student.student_id)
+          .eq("session_id", targetSession.id)
           .maybeSingle();
 
         if (existingLog) {
@@ -106,39 +118,45 @@ export const Attendance = {
           const txHash = await SolanaBlockchainGateway.recordAttendanceHash(
             student.student_id,
             targetSession.id,
-            'fingerprint_offline',
+            "fingerprint_offline",
           );
 
-          await Database.from('attendance_logs').insert({
+          await Database.from("attendance_logs").insert({
             student_id: student.student_id,
             session_id: targetSession.id,
-            method: 'fingerprint_offline',
+            method: "fingerprint_offline",
             tx_hash: txHash,
           });
 
           successCount++;
         } catch (blockchainError) {
-          console.error(`Blockchain error for student ${student.student_id}:`, blockchainError);
+          console.error(
+            `Blockchain error for student ${student.student_id}:`,
+            blockchainError,
+          );
           blockchainErrors++;
 
-          await Database.from('attendance_logs').insert({
+          await Database.from("attendance_logs").insert({
             student_id: student.student_id,
             session_id: targetSession.id,
-            method: 'fingerprint_offline',
+            method: "fingerprint_offline",
             tx_hash: null,
           });
 
           successCount++;
         }
       } catch (err) {
-        console.error(`Error processing offline scan for slot ${scan.slot}:`, err);
+        console.error(
+          `Error processing offline scan for slot ${scan.slot}:`,
+          err,
+        );
         failedCount++;
       }
     }
 
     return {
-      status: 'success',
-      message: 'Offline batch processing complete',
+      status: "success",
+      message: "Offline batch processing complete",
       stats: {
         totalReceived: scans.length,
         successful: successCount,
@@ -148,8 +166,8 @@ export const Attendance = {
       },
       note:
         blockchainErrors > 0
-          ? 'Some records were saved locally. Blockchain sync is pending.'
-          : 'All records were recorded on Solana.',
+          ? "Some records were saved locally. Blockchain sync is pending."
+          : "All records were recorded on Solana.",
     };
   },
 
@@ -161,13 +179,15 @@ export const Attendance = {
     page: number = 1,
     limit: number = 50,
   ) => {
-    const { data: profile, error: profileError } = await Database.from('user_profiles')
-      .select('role')
-      .eq('id', userId)
+    const { data: profile, error: profileError } = await Database.from(
+      "user_profiles",
+    )
+      .select("role")
+      .eq("id", userId)
       .single();
 
     if (profileError || !profile) {
-      throw new Error('UNAUTHORIZED_USER');
+      throw new Error("UNAUTHORIZED_USER");
     }
 
     const userRole = profile.role;
@@ -183,26 +203,34 @@ export const Attendance = {
       session_id
     `;
 
-    if (userRole === 'lecturer') {
+    if (userRole === "lecturer") {
       selectQuery += `, user_profiles ( full_name, matric_number, profile_image )`;
     }
 
-    let query = Database.from('attendance_logs')
-      .select(selectQuery, { count: 'exact' })
-      .eq('course_id', courseId)
-      .order('created_at', { ascending: false })
+    let query = Database.from("attendance_logs")
+      .select(selectQuery, { count: "exact" })
+      .eq("course_id", courseId)
+      .order("created_at", { ascending: false })
       .range(from, to);
 
-    if (userRole === 'student') {
-      query = query.eq('student_id', userId);
+    if (userRole === "student") {
+      query = query.eq("student_id", userId);
     }
 
-    if (month !== 'all') {
-      const parsedMonth = typeof month === 'string' ? parseInt(month) : month;
+    if (month !== "all") {
+      const parsedMonth = typeof month === "string" ? parseInt(month) : month;
       const startDate = new Date(year, parsedMonth - 1, 1).toISOString();
-      const endDate = new Date(year, parsedMonth, 0, 23, 59, 59, 999).toISOString();
+      const endDate = new Date(
+        year,
+        parsedMonth,
+        0,
+        23,
+        59,
+        59,
+        999,
+      ).toISOString();
 
-      query = query.gte('created_at', startDate).lte('created_at', endDate);
+      query = query.gte("created_at", startDate).lte("created_at", endDate);
     }
 
     const { data, error, count } = await query;
@@ -245,16 +273,22 @@ export const Attendance = {
     };
   },
 
-  getAttendanceBlockchainRecord: async (studentId: string, sessionId: string) => {
-    const record = await SolanaBlockchainGateway.getAttendanceRecord(studentId, sessionId);
+  getAttendanceBlockchainRecord: async (
+    studentId: string,
+    sessionId: string,
+  ) => {
+    const record = await SolanaBlockchainGateway.getAttendanceRecord(
+      studentId,
+      sessionId,
+    );
     if (!record) {
-      throw new Error('ATTENDANCE_RECORD_NOT_FOUND_ON_CHAIN');
+      throw new Error("ATTENDANCE_RECORD_NOT_FOUND_ON_CHAIN");
     }
     return record;
   },
 
   getsemesterReport: async (courseId: string) => {
-    const { data, error } = await Database.rpc('get_semester_attendance', {
+    const { data, error } = await Database.rpc("get_semester_attendance", {
       p_course_id: courseId,
     });
 

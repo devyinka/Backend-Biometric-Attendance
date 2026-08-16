@@ -12,21 +12,27 @@ export const UpadteProfilephoto = async (
       res.status(401).json({ error: "Unauthorized: Please log in first" });
       return;
     }
-    if (User.role !== "student") {
+    if (User.role !== "student" && User.role !== "lecturer") {
       res.status(403).json({
-        error: "Unauthorized: Only students can update profile photo",
+        error:
+          "Unauthorized: Only students and lecturers can update profile photo",
       });
       return;
     }
 
-    const { userId, photoUrl } = req.body;
+    const photoUrl = req.body?.photoUrl;
+    const file = req.file as Express.Multer.File | undefined;
 
-    if (!userId || !photoUrl) {
-      res.status(400).json({ error: "userId and photoUrl are required" });
+    if (!photoUrl && !file) {
+      res.status(400).json({
+        error: "Either an image file or photoUrl is required",
+      });
       return;
     }
 
-    const result = await UserService.updateProfilePhoto(userId, photoUrl);
+    const result = file
+      ? await UserService.uploadProfilePhoto(User.id, file)
+      : await UserService.updateProfilePhoto(User.id, photoUrl);
 
     res.status(200).json({
       status: "success",

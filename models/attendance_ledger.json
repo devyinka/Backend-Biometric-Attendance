@@ -11,7 +11,7 @@
       ],
       "args": [
         { "name": "recordId", "type": "string" },
-        { "name": "hash", "type": { "array": "u8", "size": 32 } },
+        { "name": "hash", "type": { "array": ["u8", 32] } },
         { "name": "timestamp", "type": "i64" },
         { "name": "deviceId", "type": "string" }
       ]
@@ -19,7 +19,7 @@
     {
       "name": "verifyIntegrity",
       "accounts": [{ "name": "record", "isMut": false, "isSigner": false }],
-      "args": [{ "name": "providedHash", "type": { "array": "u8", "size": 32 } }]
+      "args": [{ "name": "providedHash", "type": { "array": ["u8", 32] } }]
     }
   ],
   "accounts": [
@@ -29,7 +29,7 @@
         "kind": "struct",
         "fields": [
           { "name": "recordId", "type": "string" },
-          { "name": "hash", "type": { "array": "u8", "size": 32 } },
+          { "name": "hash", "type": { "array": ["u8", 32] } },
           { "name": "timestamp", "type": "i64" },
           { "name": "deviceId", "type": "string" },
           { "name": "bump", "type": "u8" }

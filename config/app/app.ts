@@ -34,6 +34,7 @@ import AttendanceRoute, {
 } from "../../Routes/attendanceRoute";
 import lecturerRouter from "../../Routes/lecturerRoute";
 import enrollmentRoute from "../../Routes/admin";
+import BlockchainRoute from "../../Routes/blockchainroute";
 
 export const app = express();
 
@@ -90,6 +91,7 @@ app.use("/", AttendanceRoute);
 // Apply authentication middleware globally for all routes after this point
 app.use(requireAuth);
 app.use("/", updatePasswordRoute);
+app.use("/", BlockchainRoute);
 
 // Aplly Role base acess for lecturer and student routes
 app.use("/", requireLecturerorstudent, courseRoute);

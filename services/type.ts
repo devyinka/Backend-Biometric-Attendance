@@ -17,6 +17,7 @@ export interface Response {
   phoneNumber: string;
   fullName: string;
   token: string;
+  imageurl: string;
   imageprofile: string;
   level: string;
   department: string;
