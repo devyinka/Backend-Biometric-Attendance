@@ -1,9 +1,16 @@
 import { Request, Response } from "express";
 import { AdminDatabase } from "../config/database/connectdatabase";
-import { faceService } from "../services/faceService";
 import multer from "multer";
 
-// Controller to handle biometric data submission from the kiosk, its general route.
+import * as tf from "@tensorflow/tfjs-node";
+import * as faceapi from "@vladmandic/face-api";
+import * as util from "util";
+
+if (typeof (util as any).isNullOrUndefined !== "function") {
+  (util as any).isNullOrUndefined = (obj: any) =>
+    obj === null || obj === undefined;
+}
+
 export const submitBiometrics = async (req: Request, res: Response) => {
   try {
     const { matricNumber, fingerPrintSlot } = req.body;
@@ -47,4 +54,47 @@ export const submitBiometrics = async (req: Request, res: Response) => {
     console.error("Kiosk Error:", err.message);
     res.status(500).json({ error: err.message });
   }
+};
+
+export const faceService = {
+  async loadModels() {
+    const modelPath = "./models";
+    // Ensure you are loading the models correctly from the disk
+    await faceapi.nets.ssdMobilenetv1.loadFromDisk(modelPath);
+    await faceapi.nets.faceLandmark68Net.loadFromDisk(modelPath);
+    await faceapi.nets.faceRecognitionNet.loadFromDisk(modelPath);
+  },
+
+  facedetection: async (imageBuffer: Buffer): Promise<number[]> => {
+    //  Use the globally imported tf object
+    const Tensor = tf.node.decodeImage(imageBuffer, 3) as tf.Tensor3D;
+
+    try {
+      const detection = await faceapi
+        .detectSingleFace(Tensor)
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+
+      if (!detection) {
+        throw new Error("No face detected in the image");
+      }
+
+      return Array.from(detection.descriptor);
+    } finally {
+      // 4. Always dispose to prevent memory leaks in Node
+      tf.dispose(Tensor);
+    }
+  },
+
+  verifyFace: async (
+    enrolledface: number[],
+    detectedface: number[],
+  ): Promise<boolean> => {
+    const floatEnrolled = new Float32Array(enrolledface);
+    const floatNew = new Float32Array(detectedface);
+
+    const distance = faceapi.euclideanDistance(floatEnrolled, floatNew);
+
+    return distance < 0.5;
+  },
 };
