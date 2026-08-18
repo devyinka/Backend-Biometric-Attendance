@@ -1,12 +1,24 @@
 import { createClient } from "@supabase/supabase-js";
+import WebSocket from "ws";
+
 import "dotenv/config";
 
-export const Database = createClient(
-  process.env.SUPA_BASE_URL as string,
-  process.env.PUBLISHABLE_SUPA_BASE_API_KEY as string,
-);
+const supabaseUrl = process.env.SUPA_BASE_URL as string;
 
-export const AdminDatabase = createClient(
-  process.env.SUPA_BASE_URL as string,
-  process.env.SUPA_BASE_API_KEY as string,
-);
+const publishableKey = process.env.PUBLISHABLE_SUPA_BASE_API_KEY as string;
+
+const adminKey = process.env.SUPA_BASE_API_KEY as string;
+
+const transport = WebSocket as unknown as any;
+
+export const Database = createClient(supabaseUrl, publishableKey, {
+  realtime: {
+    transport,
+  },
+});
+
+export const AdminDatabase = createClient(supabaseUrl, adminKey, {
+  realtime: {
+    transport,
+  },
+});
