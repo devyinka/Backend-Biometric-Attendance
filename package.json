@@ -19,6 +19,7 @@
     "@supabase/supabase-js": "^2.107.0",
     "@tensorflow/tfjs-node": "^4.22.0",
     "@vladmandic/face-api": "^1.7.15",
+    "bn.js": "^5.2.5",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
@@ -33,12 +34,13 @@
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
+    "@types/bn.js": "^5.2.0",
     "@types/compression": "^1.8.1",
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
     "@types/morgan": "^1.9.10",
     "@types/multer": "^2.1.0",
-    "@types/node": "^25.9.2",
+    "@types/node": "^20.0.0",
     "cross-env": "^10.1.0",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
