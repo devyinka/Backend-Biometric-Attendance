@@ -3,6 +3,11 @@ import { mqttClient } from "../config/MQTT/mqtt";
 
 export const SessionService = {
   startSession: async (courseId: string): Promise<any> => {
+    //Check if MQTT is actually connected to HiveMQ
+    if (!mqttClient.connected) {
+      throw new Error("Kiosk is currently offline. Please check connection.");
+    }
+
     const { data: session, error } = await Database.from("class_sessions")
       .insert([{ course_id: courseId, status: "active" }])
       .select("id, course_id, courses(course_code)")
@@ -10,7 +15,7 @@ export const SessionService = {
 
     if (error) {
       if (error.code === "23505") {
-        throw new Error("ALREADY_ACTIVE");
+        throw new Error("An active session already exists for this course.");
       }
       throw error;
     }
@@ -25,7 +30,26 @@ export const SessionService = {
       course: extractedCourseCode,
       courseId: courseId,
     });
-    mqttClient.publish("start_class", payload);
+
+    // NEW: 2. Publish with QoS and a callback wrapped in a Promise
+    await new Promise((resolve, reject) => {
+      mqttClient.publish(
+        "start_class",
+        payload,
+        { qos: 1, retain: false },
+        (err) => {
+          if (err) {
+            console.error("Failed to start class on MQTT:", err);
+            reject(new Error("Failed to trigger hardware kiosk"));
+          } else {
+            console.log(
+              `Class session started on MQTT for ${extractedCourseCode}`,
+            );
+            resolve(true);
+          }
+        },
+      );
+    });
 
     return session;
   },
@@ -47,6 +71,11 @@ export const SessionService = {
   },
 
   endSession: async (sessionId: string): Promise<any> => {
+    // Check if MQTT is actually connected!
+    if (!mqttClient.connected) {
+      throw new Error("Kiosk is currently offline. Please check connection.");
+    }
+
     const { data: session, error } = await AdminDatabase.from("class_sessions")
       .update({ status: "closed", ended_at: new Date().toISOString() })
       .eq("id", sessionId)
@@ -68,7 +97,26 @@ export const SessionService = {
       command: "endSession",
       course: extractedCourseCode,
     });
-    mqttClient.publish("end_class", payload);
+
+    // Publish with QoS and a callback wrapped in a Promise
+    await new Promise((resolve, reject) => {
+      mqttClient.publish(
+        "end_class",
+        payload,
+        { qos: 1, retain: false },
+        (err) => {
+          if (err) {
+            console.error("Failed to end class on MQTT:", err);
+            reject(new Error("Failed to stop hardware kiosk"));
+          } else {
+            console.log(
+              `Class session ended on MQTT for ${extractedCourseCode}`,
+            );
+            resolve(true);
+          }
+        },
+      );
+    });
 
     try {
       const { data: enrolledStudents } = await AdminDatabase.from(
