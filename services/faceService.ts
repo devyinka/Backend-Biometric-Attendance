@@ -198,63 +198,54 @@ export const faceService = {
    * Generate a 128-dimensional face descriptor
    * from an uploaded image.
    */
-  async facedetection(imageBuffer: Buffer): Promise<number[]> {
+  facedetection: async (imageBuffer: Buffer): Promise<number[]> => {
     await initializeTensorFlow();
 
-    if (!imageBuffer || imageBuffer.length === 0) {
-      throw new Error("Invalid or empty image buffer.");
-    }
+    console.log("FACE: received image");
+    console.log("FACE: image size:", imageBuffer.length);
 
     let tensor: tf.Tensor3D | null = null;
 
     try {
-      console.log("1. Decoding uploaded image...");
+      console.log("FACE: decoding image...");
 
       tensor = tf.node.decodeImage(imageBuffer, 3) as tf.Tensor3D;
 
-      console.log("2. Image decoded successfully.");
+      console.log("FACE: image decoded");
+      console.log("FACE: tensor shape:", tensor.shape);
 
-      console.log("Tensor shape:", tensor.shape);
-
-      console.log("3. Running face detection...");
+      console.log("FACE: starting detectSingleFace...");
 
       const detection = await faceapi
         .detectSingleFace(tensor)
         .withFaceLandmarks()
         .withFaceDescriptor();
 
-      console.log("4. Face detection completed.");
+      console.log("FACE: detection finished");
 
       if (!detection) {
-        throw new Error(
-          "No face detected in the image. Please upload a clear image showing one face.",
-        );
+        throw new Error("No face detected in the image.");
       }
 
-      console.log("5. Face descriptor generated.");
+      console.log("FACE: descriptor generated");
 
-      const descriptor = Array.from(detection.descriptor);
-
-      console.log("Descriptor length:", descriptor.length);
-
-      return descriptor;
+      return Array.from(detection.descriptor);
     } catch (error: unknown) {
-      console.error("Face detection processing error:");
-
+      console.error("========== FACE ERROR ==========");
       console.error(error);
 
       if (error instanceof Error) {
         console.error("Message:", error.message);
-
         console.error("Stack:", error.stack);
       }
+
+      console.error("================================");
 
       throw error;
     } finally {
       if (tensor) {
         tf.dispose(tensor);
-
-        console.log("6. Tensor disposed.");
+        console.log("FACE: tensor disposed");
       }
     }
   },

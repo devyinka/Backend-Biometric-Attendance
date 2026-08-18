@@ -50,16 +50,26 @@ export const submitBiometrics = async (req: Request, res: Response) => {
     if (insertError) throw insertError;
 
     res.status(201).json({ message: "Biometrics successfully saved." });
-  } catch (err: any) {
-    console.error("Kiosk Error:", err.message);
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    console.error("========== KIOSK ERROR ==========");
+    console.error(err);
+
+    if (err instanceof Error) {
+      console.error("Message:", err.message);
+      console.error("Stack:", err.stack);
+    }
+
+    console.error("================================");
+
+    res.status(500).json({
+      error: err instanceof Error ? err.message : "Unknown kiosk error",
+    });
   }
 };
 
 export const faceService = {
   async loadModels() {
     const modelPath = "./models";
-    // Ensure you are loading the models correctly from the disk
     await faceapi.nets.ssdMobilenetv1.loadFromDisk(modelPath);
     await faceapi.nets.faceLandmark68Net.loadFromDisk(modelPath);
     await faceapi.nets.faceRecognitionNet.loadFromDisk(modelPath);
