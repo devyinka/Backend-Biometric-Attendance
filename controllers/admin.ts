@@ -46,53 +46,6 @@ export const getAllStudents = async (
   }
 };
 
-// export const enrollStudent = async (
-//   req: AuthenticatedRequest,
-//   res: Response,
-// ) => {
-//   const User = req.user;
-//   if (!User) {
-//     return res.status(401).json({ error: "Unauthorized: Please log in first" });
-//   }
-//   if (User.role !== "admin") {
-//     return res
-//       .status(403)
-//       .json({ error: "Unauthorize: Only admins can enroll students" });
-//   }
-//   try {
-//     const { matricNumber, studentId, command } = req.body;
-//     if (!matricNumber) {
-//       return res.status(400).json({ error: "Matric number is required" });
-//     }
-//     if (!studentId) {
-//       return res.status(400).json({ error: "Student ID is required" });
-//     }
-//     // Publish the matric number to the MQTT topic for enrollment
-//     mqttClient.publish(
-//       "enrollment",
-//       JSON.stringify({
-//         command: command, // "start" or "end"
-//         matricNumber: matricNumber,
-//         studentId: studentId,
-//       }),
-//       { qos: 1, retain: false },
-//       (err) => {
-//         if (err) {
-//           console.error("Failed to trigger enrollment:", err);
-//           return res.status(500).json({ error: "Failed to enroll student" });
-//         }
-//         console.log("Enrollment message published successfully");
-//         res.status(200).json({
-//           message: "kiosk is now in registration mode for " + matricNumber,
-//         });
-//       },
-//     );
-//   } catch (error: any) {
-//     console.error("Error during enrollment:", error);
-//     res.status(500).json({ error: "fail to trigger kiosk for enrollment" });
-//   }
-// };
-
 export const enrollStudent = async (
   req: AuthenticatedRequest,
   res: Response,
