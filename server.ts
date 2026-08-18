@@ -1,23 +1,38 @@
 import http from "http";
 import "dotenv/config";
-import { app } from "./config/app/app";
-import { faceService } from "./services/faceService";
-import { initializeWebSocket } from "./config/socket/websocket";
+import * as util from "util";
 
-const PORT = process.env.PORT || 3000;
+// 1. Run the polyfill immediately at the top level
+if (typeof (util as any).isNullOrUndefined !== "function") {
+  (util as any).isNullOrUndefined = (obj: any) =>
+    obj === null || obj === undefined;
+}
 
-const server = http.createServer(app);
+// 2. Wrap your server startup in an async function
+async function startServer() {
+  try {
+    // 3. Dynamically import your modules AFTER the polyfill has run.
+    // This completely bypasses TypeScript's import hoisting.
+    const { app } = await import("./config/app/app");
+    const { faceService } = await import("./services/faceService");
+    const { initializeWebSocket } = await import("./config/socket/websocket");
 
-initializeWebSocket(server);
-app.set("io", server);
-faceService
-  .loadModels()
-  .then(() => {
+    const PORT = process.env.PORT || 3000;
+    const server = http.createServer(app);
+
+    initializeWebSocket(server);
+    app.set("io", server);
+
+    await faceService.loadModels();
     console.log("Face detection model loaded successfully");
-  })
-  .catch((error) => {
-    console.error("Error loading face detection model:", error);
-  });
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+
+    server.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server or load face models:", error);
+  }
+}
+
+// 4. Start the app
+startServer();
