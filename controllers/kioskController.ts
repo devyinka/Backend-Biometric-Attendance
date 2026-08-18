@@ -45,6 +45,6 @@ export const submitBiometrics = async (req: Request, res: Response) => {
     res.status(201).json({ message: "Biometrics successfully saved." });
   } catch (err: any) {
     console.error("Kiosk Error:", err.message);
-    res.status(500).json({ error: "Failed to process biometrics." });
+    res.status(500).json({ error: err.message });
   }
 };
