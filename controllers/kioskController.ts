@@ -76,12 +76,15 @@ export const faceService = {
   },
 
   facedetection: async (imageBuffer: Buffer): Promise<number[]> => {
-    //  Use the globally imported tf object
     const Tensor = tf.node.decodeImage(imageBuffer, 3) as tf.Tensor3D;
 
     try {
+      const detectionOptions = new faceapi.SsdMobilenetv1Options({
+        minConfidence: 0.2,
+      });
+
       const detection = await faceapi
-        .detectSingleFace(Tensor)
+        .detectSingleFace(Tensor, detectionOptions)
         .withFaceLandmarks()
         .withFaceDescriptor();
 
@@ -91,7 +94,6 @@ export const faceService = {
 
       return Array.from(detection.descriptor);
     } finally {
-      // 4. Always dispose to prevent memory leaks in Node
       tf.dispose(Tensor);
     }
   },
@@ -105,6 +107,6 @@ export const faceService = {
 
     const distance = faceapi.euclideanDistance(floatEnrolled, floatNew);
 
-    return distance < 0.5;
+    return distance < 0.55;
   },
 };
