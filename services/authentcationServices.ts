@@ -111,6 +111,7 @@ export const AuthService = {
     }
 
     profileImageUrl = await resolveProfileImageUrl(profileImageUrl);
+    
 
     return {
       id: data.user?.id || "",

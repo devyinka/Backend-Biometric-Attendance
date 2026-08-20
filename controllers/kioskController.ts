@@ -1,20 +1,11 @@
 import { Request, Response } from "express";
 import { AdminDatabase } from "../config/database/connectdatabase";
-import multer from "multer";
-
-import * as tf from "@tensorflow/tfjs-node";
-import * as faceapi from "@vladmandic/face-api";
-import * as util from "util";
-
-if (typeof (util as any).isNullOrUndefined !== "function") {
-  (util as any).isNullOrUndefined = (obj: any) =>
-    obj === null || obj === undefined;
-}
+import { faceService } from "../services/faceService"; // Import the separated service
 
 export const submitBiometrics = async (req: Request, res: Response) => {
   try {
     const { matricNumber, fingerPrintSlot } = req.body;
-    const face = req.file as Express.Multer.File;
+    const face = req.file as Express.Multer.File | undefined;
 
     if (!matricNumber || fingerPrintSlot === undefined || !face) {
       res
@@ -23,6 +14,18 @@ export const submitBiometrics = async (req: Request, res: Response) => {
       return;
     }
 
+    if (!face.buffer || face.buffer.length === 0) {
+      res.status(400).json({ error: "Uploaded image is empty or invalid." });
+      return;
+    }
+
+    console.log("Biometric submission received");
+    console.log("Matric number:", matricNumber);
+    console.log("Fingerprint slot:", fingerPrintSlot);
+
+    // -----------------------------------------
+    // Find student
+    // -----------------------------------------
     const { data: student, error: studentError } = await AdminDatabase.from(
       "user_profiles",
     )
@@ -30,83 +33,66 @@ export const submitBiometrics = async (req: Request, res: Response) => {
       .eq("matric_number", matricNumber)
       .maybeSingle();
 
-    if (studentError || !student) {
-      res
-        .status(404)
-        .json({ error: studentError?.message || "Student not found." });
+    if (studentError) {
+      console.error("Student database error:", studentError);
+      res.status(500).json({ error: studentError.message });
       return;
     }
 
+    if (!student) {
+      res.status(404).json({ error: "Student not found." });
+      return;
+    }
+
+    console.log("Student found:", student.id);
+
+    // -----------------------------------------
+    // Generate face descriptor (via Microservice)
+    // -----------------------------------------
+    console.log("Starting remote face detection...");
     const faceVector = await faceService.facedetection(face.buffer);
+
+    // -----------------------------------------
+    // Save biometric data
+    // -----------------------------------------
+    const fingerprintSlot = Number.parseInt(String(fingerPrintSlot), 10);
+
+    if (Number.isNaN(fingerprintSlot)) {
+      res.status(400).json({ error: "Invalid fingerprint slot." });
+      return;
+    }
 
     const { error: insertError } = await AdminDatabase.from(
       "biometrics",
     ).insert({
       student_id: student.id,
-      fingerprint_slot: parseInt(fingerPrintSlot, 10),
+      fingerprint_slot: fingerprintSlot,
       face_vector: faceVector,
     });
 
-    if (insertError) throw insertError;
+    if (insertError) {
+      // Handle Supabase unique constraint error for duplicate slots
+      if (insertError.code === "23505") {
+        res.status(409).json({ error: "Biometric slot is already in use." });
+        return;
+      }
+      console.error("Biometric database insert error:", insertError);
+      throw insertError;
+    }
 
+    console.log("Biometric data saved successfully.");
     res.status(201).json({ message: "Biometrics successfully saved." });
   } catch (err: unknown) {
-    console.error("========== KIOSK ERROR ==========");
+    console.error("=================================");
+    console.error("Kiosk Error");
+    console.error("=================================");
     console.error(err);
 
     if (err instanceof Error) {
-      console.error("Message:", err.message);
-      console.error("Stack:", err.stack);
+      res.status(500).json({ error: err.message });
+      return;
     }
 
-    console.error("================================");
-
-    res.status(500).json({
-      error: err instanceof Error ? err.message : "Unknown kiosk error",
-    });
+    res.status(500).json({ error: "An unexpected error occurred." });
   }
-};
-
-export const faceService = {
-  async loadModels() {
-    const modelPath = "./models";
-    await faceapi.nets.ssdMobilenetv1.loadFromDisk(modelPath);
-    await faceapi.nets.faceLandmark68Net.loadFromDisk(modelPath);
-    await faceapi.nets.faceRecognitionNet.loadFromDisk(modelPath);
-  },
-
-  facedetection: async (imageBuffer: Buffer): Promise<number[]> => {
-    const Tensor = tf.node.decodeImage(imageBuffer, 3) as tf.Tensor3D;
-
-    try {
-      const detectionOptions = new faceapi.SsdMobilenetv1Options({
-        minConfidence: 0.2,
-      });
-
-      const detection = await faceapi
-        .detectSingleFace(Tensor, detectionOptions)
-        .withFaceLandmarks()
-        .withFaceDescriptor();
-
-      if (!detection) {
-        throw new Error("No face detected in the image");
-      }
-
-      return Array.from(detection.descriptor);
-    } finally {
-      tf.dispose(Tensor);
-    }
-  },
-
-  verifyFace: async (
-    enrolledface: number[],
-    detectedface: number[],
-  ): Promise<boolean> => {
-    const floatEnrolled = new Float32Array(enrolledface);
-    const floatNew = new Float32Array(detectedface);
-
-    const distance = faceapi.euclideanDistance(floatEnrolled, floatNew);
-
-    return distance < 0.55;
-  },
 };

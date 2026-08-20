@@ -8,12 +8,22 @@ export const Attendance = {
     fingerprintSlot: number,
     courseId: string,
   ) => {
+    //Verify the fingerprint exists in the database
     const { data: student } = await AdminDatabase.from("biometrics")
       .select("student_id, face_vector, user_profiles(full_name)")
       .eq("fingerprint_slot", fingerprintSlot)
       .single();
 
     if (!student) throw new Error("UNREGISTERED_FINGERPRINT");
+
+    // FAIL FAST: Check for an active session BEFORE calling the AI microservice
+    const { data: session } = await Database.from("class_sessions")
+      .select("id")
+      .eq("course_id", courseId)
+      .eq("status", "active")
+      .single();
+
+    if (!session) throw new Error("NO_ACTIVE_SESSION");
 
     const liveFaceArray = await faceService.facedetection(face);
     const isMatch = await faceService.verifyFace(
@@ -25,14 +35,7 @@ export const Attendance = {
       throw new Error("FACE_MISMATCH_REJECTED");
     }
 
-    const { data: session } = await Database.from("class_sessions")
-      .select("id")
-      .eq("course_id", courseId)
-      .eq("status", "active")
-      .single();
-
-    if (!session) throw new Error("NO_ACTIVE_SESSION");
-
+    // Record to Solana and Supabase
     const txHash = await SolanaBlockchainGateway.recordAttendanceHash(
       student.student_id,
       session.id,
@@ -58,7 +61,6 @@ export const Attendance = {
       blockchainVerification: "Hash recorded on Solana",
     };
   },
-
   markOfflineAttendance: async (
     scans: { slot: number; timeStamp: string }[],
     courseId: string,
