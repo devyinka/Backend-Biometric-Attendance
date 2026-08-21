@@ -19,12 +19,13 @@
     {
       "name": "verifyIntegrity",
       "accounts": [{ "name": "record", "isMut": false, "isSigner": false }],
-      "args": [{ "name": "providedHash", "type": { "array": ["u8", 32] } }]
+      "args": [{ "name": "providedHash", "type": { "array": ["u8", 32] } }],
+      "returns": "bool"
     }
   ],
   "accounts": [
     {
-      "name": "attendanceRecord",
+      "name": "AttendanceRecord",
       "type": {
         "kind": "struct",
         "fields": [
