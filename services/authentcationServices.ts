@@ -75,6 +75,7 @@ export const AuthService = {
       level: data.user?.user_metadata.level || "",
       department: data.user?.user_metadata.department || "",
       token: data.session?.access_token || "",
+      isEnrolled: false,
     };
   },
 
@@ -95,6 +96,7 @@ export const AuthService = {
 
     const userId = data.user?.id;
     let profileImageUrl = data.user?.user_metadata.profile_image || "";
+    let isEnrolled = false;
 
     if (userId) {
       const { data: profileData, error: profileError } =
@@ -106,12 +108,19 @@ export const AuthService = {
       if (profileError) {
         throw new Error(profileError.message);
       }
-
       profileImageUrl = profileData?.profile_image || profileImageUrl;
+
+      const { data: biometricData } = await AdminDatabase.from("biometrics")
+        .select("student_id")
+        .eq("student_id", userId)
+        .maybeSingle();
+
+      if (biometricData) {
+        isEnrolled = true;
+      }
     }
 
     profileImageUrl = await resolveProfileImageUrl(profileImageUrl);
-    
 
     return {
       id: data.user?.id || "",
@@ -125,6 +134,7 @@ export const AuthService = {
       department: data.user?.user_metadata.department || "",
       imageprofile: profileImageUrl,
       token: data.session?.access_token || "",
+      isEnrolled: isEnrolled,
     };
   },
 

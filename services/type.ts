@@ -21,6 +21,7 @@ export interface Response {
   imageprofile: string;
   level: string;
   department: string;
+  isEnrolled: boolean;
 }
 
 export interface Course {

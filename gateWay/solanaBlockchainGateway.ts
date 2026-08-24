@@ -247,12 +247,19 @@ export const SolanaBlockchainGateway = {
     sessionId: string,
     deviceId: string = "default",
   ): Promise<string> => {
+    // I clean the studentId and sessionId to make sure they are 32 characters long when combined, which is required for the PDA derivation
+    const cleanStudentId = studentId.replace(/-/g, "");
+    const cleanSessionId = sessionId.replace(/-/g, "");
+
+    // I take 16 chars from each to create an EXACTLY 32-character unique seed for Solana
+    const recordId =
+      cleanStudentId.substring(0, 16) + cleanSessionId.substring(0, 16);
+
     const timestamp = Math.floor(Date.now() / 1000);
-    const recordId = `${studentId}-${sessionId}`;
 
     const hash = generateAttendanceHash(
-      studentId,
-      sessionId,
+      cleanStudentId,
+      cleanSessionId,
       timestamp,
       deviceId,
     );
@@ -295,7 +302,6 @@ export const SolanaBlockchainGateway = {
     console.log("✅ Attendance recorded on Solana:", signature);
     return signature;
   },
-
   // ==========================================================
   // VERIFY ATTENDANCE
   // ==========================================================
