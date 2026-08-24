@@ -2,14 +2,9 @@
 import axios from "axios";
 import FormData from "form-data";
 
-// Point this to your Hugging Face Space URL in production
 const PYTHON_API_URL = process.env.FACE_API_URL || "http://127.0.0.1:7860";
 
 export const faceService = {
-  /**
-   * We keep this method empty so if your server.ts calls
-   * faceService.loadModels() on startup, it doesn't crash.
-   */
   async loadModels() {
     console.log(
       "Models are now handled externally by the Python AI microservice.",

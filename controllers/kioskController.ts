@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { AdminDatabase } from "../config/database/connectdatabase";
-import { faceService } from "../services/faceService"; // Import the separated service
+import { faceService } from "../services/faceService";
+import { saveDebugKioskImage } from "../utilities/kioskimage";
 
 export const submitBiometrics = async (req: Request, res: Response) => {
   try {
@@ -45,6 +46,18 @@ export const submitBiometrics = async (req: Request, res: Response) => {
     }
 
     console.log("Student found:", student.id);
+
+    saveDebugKioskImage(face.buffer, matricNumber)
+      .then((url) => {
+        if (url) {
+          console.log("==================================================");
+          console.log("📸 LATEST ESP32 CAPTURE URL (Click to view):");
+          console.log(url);
+          console.log("==================================================");
+        }
+      })
+      .catch((err) => console.error("Debug upload failed in background:", err));
+    // =========================================
 
     // -----------------------------------------
     // Generate face descriptor (via Microservice)
