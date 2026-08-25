@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { AdminDatabase } from "../config/database/connectdatabase";
 import { faceService } from "../services/faceService";
 import { saveDebugKioskImage } from "../utilities/kioskimage";
+import { mqttClient } from "../config/MQTT/mqtt"; // Added MQTT client import
 
 export const submitBiometrics = async (req: Request, res: Response) => {
   try {
@@ -82,10 +83,6 @@ export const submitBiometrics = async (req: Request, res: Response) => {
     // ============================================================
     // 4. COPY VALUES NEEDED BY BACKGROUND PROCESS
     // ============================================================
-    //
-    // Do not depend on the Express request object after we send
-    // the response. Capture everything we need now.
-    //
     const imageBuffer = Buffer.from(face.buffer);
     const studentId = student.id;
     const matric = String(matricNumber);
@@ -93,17 +90,6 @@ export const submitBiometrics = async (req: Request, res: Response) => {
     // ============================================================
     // 5. RETURN IMMEDIATELY TO ESP32
     // ============================================================
-    //
-    // This is the important change.
-    //
-    // The ESP32 no longer needs to wait for:
-    //
-    //    faceService.facedetection()
-    //    Supabase biometric insert
-    //
-    // The request is accepted and processing continues in
-    // the background.
-    //
     res.status(202).json({
       success: true,
       accepted: true,
@@ -117,11 +103,8 @@ export const submitBiometrics = async (req: Request, res: Response) => {
     );
 
     // ============================================================
-    // 6. BACKGROUND PROCESSING
+    // 6. BACKGROUND PROCESSING WITH MQTT FEEDBACK
     // ============================================================
-    //
-    // setImmediate lets Express finish the HTTP request first.
-    //
     setImmediate(async () => {
       try {
         console.log("==============================================");
@@ -151,9 +134,7 @@ export const submitBiometrics = async (req: Request, res: Response) => {
         // FACE DETECTION / DESCRIPTOR GENERATION
         // --------------------------------------------------------
         console.log("Starting remote face detection...");
-
         const faceVector = await faceService.facedetection(imageBuffer);
-
         console.log("Face descriptor generated successfully.");
 
         // --------------------------------------------------------
@@ -168,19 +149,41 @@ export const submitBiometrics = async (req: Request, res: Response) => {
         });
 
         if (insertError) {
-          // Duplicate fingerprint slot
           if (insertError.code === "23505") {
             console.error("Biometric slot already in use.", {
               studentId,
               fingerprintSlot,
             });
+
+            // Send MQTT Failure: Slot In Use
+            mqttClient.publish(
+              "kiosk/biometric_status",
+              JSON.stringify({
+                status: "FAILED",
+                message: "Slot In Use",
+                matricNumber: matric,
+                slot: fingerprintSlot,
+              }),
+              { qos: 1 },
+            );
             return;
           }
 
           console.error("Biometric database insert error:", insertError);
-
           throw insertError;
         }
+
+        // Send MQTT Success
+        mqttClient.publish(
+          "kiosk/biometric_status",
+          JSON.stringify({
+            status: "SUCCESS",
+            message: "Registration OK",
+            matricNumber: matric,
+            slot: fingerprintSlot,
+          }),
+          { qos: 1 },
+        );
 
         console.log("==============================================");
         console.log("BIOMETRIC PROCESSING SUCCESSFUL");
@@ -200,6 +203,18 @@ export const submitBiometrics = async (req: Request, res: Response) => {
         } else {
           console.error(backgroundError);
         }
+
+        // Send MQTT Failure: Generic/AI Error
+        mqttClient.publish(
+          "kiosk/biometric_status",
+          JSON.stringify({
+            status: "FAILED",
+            message: "Face AI Error",
+            matricNumber: matric,
+            slot: fingerprintSlot,
+          }),
+          { qos: 1 },
+        );
       }
     });
   } catch (err: unknown) {
@@ -211,16 +226,12 @@ export const submitBiometrics = async (req: Request, res: Response) => {
       console.error(err.message);
       console.error(err.stack);
 
-      // Important:
-      // Only send an HTTP response here if one has not already
-      // been sent.
       if (!res.headersSent) {
         res.status(500).json({
           success: false,
           error: err.message,
         });
       }
-
       return;
     }
 
