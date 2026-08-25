@@ -74,7 +74,7 @@ export const Attendance = {
     if (sessionError || !sessions || sessions.length === 0) {
       throw new Error("NO_SESSIONS_FOUND_FOR_COURSE");
     }
-
+    console.log(courseId, sessions);
     let successCount = 0;
     let duplicateCount = 0;
     let failedCount = 0;
