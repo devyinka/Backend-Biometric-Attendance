@@ -1,3 +1,4 @@
+import { console } from "inspector/promises";
 import { Database, AdminDatabase } from "../config/database/connectdatabase";
 import { SolanaBlockchainGateway } from "../gateWay/solanaBlockchainGateway";
 import { faceService } from "./faceService";
@@ -8,11 +9,17 @@ export const Attendance = {
     fingerprintSlot: number,
     courseId: string,
   ) => {
+    console.log("Marking live attendance for course:", courseId);
+    console.log("Fingerprint slot:", fingerprintSlot);
+    console.log("Face buffer:", face);
+
     //Verify the fingerprint exists in the database
     const { data: student } = await AdminDatabase.from("biometrics")
       .select("student_id, face_vector, user_profiles(full_name)")
       .eq("fingerprint_slot", fingerprintSlot)
       .single();
+
+    console.log("Retrieved student data:", student);
 
     if (!student) throw new Error("UNREGISTERED_FINGERPRINT");
 
@@ -197,13 +204,13 @@ export const Attendance = {
     const to = from + limit - 1;
 
     let selectQuery = `
-      id,
-      created_at,
-      status,
-      tx_hash,
-      student_id,
-      session_id
-    `;
+        id,
+        created_at,
+        status,
+        tx_hash,
+        student_id,
+        session_id
+      `;
 
     if (userRole === "lecturer") {
       selectQuery += `, user_profiles ( full_name, matric_number, profile_image )`;
