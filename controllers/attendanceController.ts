@@ -42,6 +42,11 @@ export const markOfflineAttendance = async (
 ): Promise<void> => {
   try {
     const { scans, courseId } = req.body;
+
+    console.log("Received request to mark offline attendance:", {
+      scans,
+      courseId,
+    });
     if (!courseId) {
       res.status(400).json({ error: "Missing courseId" });
       return;
@@ -129,11 +134,9 @@ export const getAttendanceBlockchainRecord = async (
   };
 
   if (!studentId || !sessionId) {
-    res
-      .status(400)
-      .json({
-        error: "Missing required query parameters: studentId and sessionId",
-      });
+    res.status(400).json({
+      error: "Missing required query parameters: studentId and sessionId",
+    });
     return;
   }
 
