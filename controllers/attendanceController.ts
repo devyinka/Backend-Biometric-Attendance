@@ -32,7 +32,18 @@ export const markLiveAttendance = async (
     res.status(200).json(result);
   } catch (error: any) {
     console.error("Error marking live attendance:", error);
-    res.status(500).json({ error: "Failed to mark live attendance" });
+
+    // Map known errors to appropriate HTTP status codes
+    const errorMap: Record<string, number> = {
+      UNREGISTERED_FINGERPRINT: 400,
+      NO_ACTIVE_SESSION: 404,
+      FACE_MISMATCH_REJECTED: 400,
+      // Add more as needed
+    };
+    const status = errorMap[error.message] || 500;
+    const message = error.message || "Failed to mark live attendance";
+
+    res.status(status).json({ error: message });
   }
 };
 
