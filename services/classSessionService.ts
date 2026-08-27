@@ -36,7 +36,7 @@ export const SessionService = {
       mqttClient.publish(
         "start_class",
         payload,
-        { qos: 1, retain: false },
+        { qos: 1, retain: true },
         (err) => {
           if (err) {
             console.error("Failed to start class on MQTT:", err);
@@ -103,7 +103,7 @@ export const SessionService = {
       mqttClient.publish(
         "end_class",
         payload,
-        { qos: 1, retain: false },
+        { qos: 1, retain: true },
         (err) => {
           if (err) {
             console.error("Failed to end class on MQTT:", err);
