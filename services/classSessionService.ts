@@ -3,7 +3,7 @@ import { mqttClient } from "../config/MQTT/mqtt";
 
 export const SessionService = {
   startSession: async (courseId: string): Promise<any> => {
-    //Check if MQTT is actually connected to HiveMQ
+    // Check MQTT connection
     if (!mqttClient.connected) {
       throw new Error("Kiosk is currently offline. Please check connection.");
     }
@@ -31,7 +31,7 @@ export const SessionService = {
       courseId: courseId,
     });
 
-    // NEW: 2. Publish with QoS and a callback wrapped in a Promise
+    // Publish start_class with retain
     await new Promise((resolve, reject) => {
       mqttClient.publish(
         "start_class",
@@ -49,6 +49,11 @@ export const SessionService = {
           }
         },
       );
+    });
+
+    // --- CLEANUP: Clear any stale 'end_class' retained message ---
+    mqttClient.publish("end_class", "", { retain: true }, (err) => {
+      if (err) console.error("Failed to clear end_class retain:", err);
     });
 
     return session;
@@ -71,7 +76,6 @@ export const SessionService = {
   },
 
   endSession: async (sessionId: string): Promise<any> => {
-    // Check if MQTT is actually connected!
     if (!mqttClient.connected) {
       throw new Error("Kiosk is currently offline. Please check connection.");
     }
@@ -98,7 +102,7 @@ export const SessionService = {
       course: extractedCourseCode,
     });
 
-    // Publish with QoS and a callback wrapped in a Promise
+    // Publish end_class with retain
     await new Promise((resolve, reject) => {
       mqttClient.publish(
         "end_class",
@@ -118,6 +122,12 @@ export const SessionService = {
       );
     });
 
+    // --- CLEANUP: Clear any stale 'start_class' retained message ---
+    mqttClient.publish("start_class", "", { retain: true }, (err) => {
+      if (err) console.error("Failed to clear start_class retain:", err);
+    });
+
+    // Mark absent students
     try {
       const { data: enrolledStudents } = await AdminDatabase.from(
         "student_courses",
@@ -132,7 +142,6 @@ export const SessionService = {
 
       if (enrolledStudents && presentLogs) {
         const presentIds = presentLogs.map((log) => log.student_id);
-
         const absentRecords = enrolledStudents
           .filter((enrolled) => !presentIds.includes(enrolled.student_id))
           .map((missingStudent) => ({
