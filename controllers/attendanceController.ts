@@ -13,13 +13,13 @@ export const markLiveAttendance = async (
     console.log("Received request to mark live attendance:", {
       fingerPrintSlot,
       courseId,
-      face: face ? "Face data received" : "No face data",
+      face: face ? `Face data (${face.length} bytes)` : "No face provided",
     });
 
     const fingerprintSlotInt = parseInt(fingerPrintSlot, 10);
 
-    if (isNaN(fingerprintSlotInt) || !courseId || !face) {
-      res.status(400).json({ error: "Missing required data" });
+    if (isNaN(fingerprintSlotInt) || !courseId) {
+      res.status(400).json({ error: "Missing fingerPrintSlot or courseId" });
       return;
     }
 
@@ -33,12 +33,10 @@ export const markLiveAttendance = async (
   } catch (error: any) {
     console.error("Error marking live attendance:", error);
 
-    // Map known errors to appropriate HTTP status codes
     const errorMap: Record<string, number> = {
       UNREGISTERED_FINGERPRINT: 400,
       NO_ACTIVE_SESSION: 404,
       FACE_MISMATCH_REJECTED: 400,
-      // Add more as needed
     };
     const status = errorMap[error.message] || 500;
     const message = error.message || "Failed to mark live attendance";
@@ -46,7 +44,6 @@ export const markLiveAttendance = async (
     res.status(status).json({ error: message });
   }
 };
-
 export const markOfflineAttendance = async (
   req: Request,
   res: Response,

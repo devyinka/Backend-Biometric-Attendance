@@ -5,25 +5,23 @@ import { faceService } from "./faceService";
 
 export const Attendance = {
   markLiveAttendance: async (
-    face: Buffer,
+    face: Buffer | undefined,
     fingerprintSlot: number,
     courseId: string,
   ) => {
     console.log("Marking live attendance for course:", courseId);
     console.log("Fingerprint slot:", fingerprintSlot);
-    console.log("Face buffer:", face);
+    console.log("Face provided:", !!face);
 
-    //Verify the fingerprint exists in the database
+    //  Verify fingerprint exists
     const { data: student } = await AdminDatabase.from("biometrics")
       .select("student_id, face_vector, user_profiles(full_name)")
       .eq("fingerprint_slot", fingerprintSlot)
       .single();
 
-    console.log("Retrieved student data:", student);
-
     if (!student) throw new Error("UNREGISTERED_FINGERPRINT");
 
-    // FAIL FAST: Check for an active session BEFORE calling the AI microservice
+    //  Check for active session
     const { data: session } = await Database.from("class_sessions")
       .select("id")
       .eq("course_id", courseId)
@@ -32,27 +30,46 @@ export const Attendance = {
 
     if (!session) throw new Error("NO_ACTIVE_SESSION");
 
-    const liveFaceArray = await faceService.facedetection(face);
-    const isMatch = await faceService.verifyFace(
-      student.face_vector,
-      liveFaceArray,
-    );
+    let method = "fingerprint_only";
+    let faceMatched = false;
 
-    if (!isMatch) {
-      throw new Error("FACE_MISMATCH_REJECTED");
+    if (face && face.length > 0) {
+      try {
+        const liveFaceArray = await faceService.facedetection(face);
+        const isMatch = await faceService.verifyFace(
+          student.face_vector,
+          liveFaceArray,
+        );
+        if (isMatch) {
+          faceMatched = true;
+          method = "face_and_fingerprint";
+          console.log("Face verification successful.");
+        } else {
+          console.warn("Face mismatch – falling back to fingerprint-only.");
+          method = "fingerprint_only_fallback";
+        }
+      } catch (faceError) {
+        console.warn(
+          "Face detection/verification error, falling back to fingerprint-only:",
+          faceError,
+        );
+        method = "fingerprint_only_fallback";
+      }
+    } else {
+      console.log("No face provided – fingerprint-only attendance.");
     }
 
-    // Record to Solana and Supabase
+    //  Record attendance on Solana and Supabase
     const txHash = await SolanaBlockchainGateway.recordAttendanceHash(
       student.student_id,
       session.id,
-      "face_and_fingerprint",
+      method,
     );
 
     await Database.from("attendance_logs").insert({
       student_id: student.student_id,
       session_id: session.id,
-      method: "face_and_fingerprint",
+      method: method,
       tx_hash: txHash,
     });
 
@@ -63,11 +80,12 @@ export const Attendance = {
 
     return {
       status: "success",
-      message: `Attendance marked for ${studentName}`,
+      message: `Attendance marked for ${studentName} (${method})`,
       txHash,
       blockchainVerification: "Hash recorded on Solana",
     };
   },
+
   markOfflineAttendance: async (
     scans: { slot: number; timeStamp: string }[],
     courseId: string,
