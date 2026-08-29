@@ -90,14 +90,14 @@ export const Attendance = {
     scans: { slot: number; timeStamp: string }[],
     courseId: string,
   ) => {
-    const { data: sessions, error: sessionError } = await Database.from(
+    const { data: sessions, error: sessionError } = await AdminDatabase.from(
       "class_sessions",
     )
       .select("id, started_at, ended_at")
       .eq("course_id", courseId);
 
     if (sessionError || !sessions || sessions.length === 0) {
-      throw new Error("NO_SESSIONS_FOUND_FOR_COURSE");
+      throw new Error(sessionError?.message || "NO_ACTIVE_SESSION");
     }
     console.log(courseId, sessions);
     let successCount = 0;
