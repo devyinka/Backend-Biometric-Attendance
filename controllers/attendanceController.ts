@@ -65,10 +65,11 @@ export const markOfflineAttendance = async (
     }
 
     const result = await Attendance.markOfflineAttendance(scans, courseId);
+    console.log("Offline attendance marking result:", result);
     res.status(200).json(result);
   } catch (error: any) {
     console.error("Error marking offline attendance:", error);
-    res.status(500).json({ error: "Failed to mark offline attendance" });
+    res.status(500).json({ error: error.message });
   }
 };
 
