@@ -18,9 +18,23 @@ export const startSession = async (
     return;
   }
 
-  const { courseId } = req.body;
+  const { courseId, date, startTime, endTime, venue } = req.body;
+
+  console.log("Received request to start session:", {
+    courseId,
+    date,
+    startTime,
+    endTime,
+    venue,
+  });
   try {
-    const session = await SessionService.startSession(courseId);
+    const session = await SessionService.startSession(
+      courseId,
+      date,
+      startTime,
+      endTime,
+      venue,
+    );
     res
       .status(200)
       .json({ message: "Class session started successfully", session });

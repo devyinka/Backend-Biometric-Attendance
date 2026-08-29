@@ -2,14 +2,31 @@ import { Database, AdminDatabase } from "../config/database/connectdatabase";
 import { mqttClient } from "../config/MQTT/mqtt";
 
 export const SessionService = {
-  startSession: async (courseId: string): Promise<any> => {
-    // Check MQTT connection
+  startSession: async (
+    courseId: string,
+    date: string,
+    startTime: string,
+    endTime: string,
+    venue: string,
+  ): Promise<any> => {
     if (!mqttClient.connected) {
       throw new Error("Kiosk is currently offline. Please check connection.");
     }
 
+    const startDateTime = new Date(`${date}T${startTime}:00Z`);
+    const endDateTime = new Date(`${date}T${endTime}:00Z`);
+
     const { data: session, error } = await Database.from("class_sessions")
-      .insert([{ course_id: courseId, status: "active" }])
+      .insert([
+        {
+          course_id: courseId,
+          status: "active",
+          session_date: date,
+          started_at: startDateTime,
+          ended_at: endDateTime,
+          venue: venue,
+        },
+      ])
       .select("id, course_id, courses(course_code)")
       .single();
 

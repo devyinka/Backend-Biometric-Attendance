@@ -97,7 +97,7 @@ export const Attendance = {
       .eq("course_id", courseId);
 
     if (sessionError || !sessions || sessions.length === 0) {
-      throw new Error(sessionError?.message || "NO_ACTIVE_SESSION");
+      throw new Error(sessionError?.message);
     }
     console.log(courseId, sessions);
     let successCount = 0;
