@@ -90,6 +90,10 @@ export const Attendance = {
     scans: { slot: number; timeStamp: string }[],
     courseId: string,
   ) => {
+    console.log("Processing offline attendance scans for course:", courseId);
+    console.log("Total scans received:", scans.length);
+    console.log("Scan details:", scans);
+
     const { data: sessions, error: sessionError } = await AdminDatabase.from(
       "class_sessions",
     )
@@ -98,7 +102,9 @@ export const Attendance = {
       .in("status", ["active", "closed"]);
 
     if (sessionError || !sessions || sessions.length === 0) {
-      throw new Error(sessionError?.message);
+      throw new Error(
+        sessionError?.message || "NO_ACTIVE_OR_CLOSED_SESSIONS_FOUND",
+      );
     }
     console.log(courseId, sessions);
     let successCount = 0;
