@@ -57,7 +57,7 @@ export const StudentService = {
   },
 
   getActiveCourses: async (studentId: string): Promise<any> => {
-    // 1. Get all course IDs the student is registered in
+    //  Get all course IDs the student is registered in
     const { data: studentCourses, error: coursesError } = await Database.from(
       "student_courses",
     )
@@ -71,7 +71,7 @@ export const StudentService = {
 
     const courseIds = studentCourses.map((sc) => sc.course_id);
 
-    // 2. Find any active sessions for those courses
+    //  Find any active sessions for those courses
     const { data: activeSessions, error: sessionError } = await Database.from(
       "class_sessions",
     )

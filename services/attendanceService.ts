@@ -90,7 +90,7 @@ export const Attendance = {
     scans: { slot: number; timeStamp: string }[],
     courseId: string,
   ) => {
-    const { data: sessions, error: sessionError } = await AdminDatabase.from(
+    const { data: sessions, error: sessionError } = await Database.from(
       "class_sessions",
     )
       .select("id, started_at, ended_at")
