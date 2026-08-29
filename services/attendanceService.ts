@@ -127,12 +127,18 @@ export const Attendance = {
           continue;
         }
 
-        const { data: student } = await AdminDatabase.from("biometrics")
+        const { data: student, error: studentError } = await AdminDatabase.from(
+          "biometrics",
+        )
           .select("student_id")
           .eq("fingerprint_slot", scan.slot)
-          .single();
+          .maybeSingle();
 
-        if (!student) {
+        if (studentError || !student) {
+          console.warn(
+            `Student not found for slot ${scan.slot}:`,
+            studentError,
+          );
           failedCount++;
           continue;
         }
