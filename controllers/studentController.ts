@@ -113,3 +113,35 @@ export const getAttendanceRecordsOfRegisteredCourses = async (
     });
   }
 };
+
+export const getActiveCourses = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
+  const user = req.user;
+
+  if (!user) {
+    res.status(401).json({ error: "Unauthorized: Please log in first" });
+    return;
+  }
+
+  if (user.role !== "student") {
+    res.status(403).json({
+      error: "Unauthorized: Only students can view active courses",
+    });
+    return;
+  }
+
+  try {
+    const activeCourses = await StudentService.getActiveCourses(user.id);
+    res.status(200).json({
+      message: "Successfully fetched active courses",
+      data: activeCourses,
+    });
+  } catch (error: any) {
+    console.error("Fetch Active Courses Error:", error);
+    res.status(500).json({
+      error: error.message || "Failed to fetch active courses",
+    });
+  }
+};

@@ -7,33 +7,42 @@ import {
   updateCourseSettings,
   getAdminDashboardStats,
   getAllLecturers,
+  getAttendanceOverview,
+  getAttendanceRecords,
 } from "../controllers/admin";
 
-const enrollmentRoute = Router();
+const adminRoute = Router();
+// const enrollmentRoute = Router();
 
-const getAllStudentsRoute = Router();
-const createCourseRoute = Router();
-const getAllLecturerRoute = Router();
-const getAllCoursesRoute = Router();
-const updateCourseSettingsRoute = Router();
-const getAdminDashboardStatsRoute = Router();
+// const getAllStudentsRoute = Router();
+// const createCourseRoute = Router();
+// const getAllLecturerRoute = Router();
+// const getAllCoursesRoute = Router();
+// const updateCourseSettingsRoute = Router();
+// const getAdminDashboardStatsRoute = Router();
+// const getAttendanceOverviewRoute = Router();
+// const getAttendanceRecordsRoute = Router();
 
-getAdminDashboardStatsRoute.get("/adminDashboard", getAdminDashboardStats);
-getAllStudentsRoute.get("/getallstudents", getAllStudents);
-enrollmentRoute.post("/enrollment", enrollStudent);
-createCourseRoute.post("/createCourse", createCourse);
-getAllLecturerRoute.get("/getalllecturers", getAllLecturers);
+adminRoute.get("/adminDashboard", getAdminDashboardStats);
+adminRoute.get("/attendanceOverview", getAttendanceOverview);
+adminRoute.get("/attendanceRecords", getAttendanceRecords);
+adminRoute.get("/attendanceRecords/:courseId", getAttendanceRecords);
+adminRoute.get("/getallstudents", getAllStudents);
+adminRoute.post("/enrollment", enrollStudent);
+adminRoute.post("/createCourse", createCourse);
+adminRoute.get("/getalllecturers", getAllLecturers);
+adminRoute.get("/getallcourses", getAllCourses);
+adminRoute.post("/courses/:id", updateCourseSettings);
 
-getAllCoursesRoute.get("/getallcourses", getAllCourses);
-updateCourseSettingsRoute.post("/courses/:id", updateCourseSettings);
-
-export default enrollmentRoute;
-export {
-  enrollmentRoute,
-  getAdminDashboardStatsRoute,
-  getAllStudentsRoute,
-  createCourseRoute,
-  getAllLecturerRoute,
-  getAllCoursesRoute,
-  updateCourseSettingsRoute,
-};
+export default adminRoute;
+// export {
+//   enrollmentRoute,
+//   getAttendanceRecordsRoute,
+//   getAdminDashboardStatsRoute,
+//   getAllStudentsRoute,
+//   createCourseRoute,
+//   getAllLecturerRoute,
+//   getAllCoursesRoute,
+//   updateCourseSettingsRoute,
+//   getAttendanceOverviewRoute,
+// };

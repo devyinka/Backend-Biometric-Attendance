@@ -245,3 +245,43 @@ export const updateCourseSettings = async (
     res.status(500).json({ error: error.message || "Failed to save changes" });
   }
 };
+
+export const getAttendanceOverview = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
+  const user = req.user;
+  if (!user || user.role !== "admin") {
+    res.status(403).json({ error: "Unauthorized" });
+    return;
+  }
+  try {
+    const overview = await AdminService.getAttendanceOverview();
+    res.status(200).json({ success: true, data: overview });
+  } catch (error: any) {
+    console.error("Admin attendance overview error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getAttendanceRecords = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
+  const user = req.user;
+  if (!user || (user.role !== "admin" && user.role !== "lecturer")) {
+    res.status(403).json({ error: "Unauthorized" });
+    return;
+  }
+
+  try {
+    const { courseId } = req.params; // may be undefined
+    const records = await AdminService.getAttendanceRecords(
+      courseId as string | undefined,
+    );
+    res.status(200).json({ success: true, records });
+  } catch (error: any) {
+    console.error("Attendance records error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};

@@ -55,4 +55,38 @@ export const StudentService = {
     }
     return data;
   },
+
+  getActiveCourses: async (studentId: string): Promise<any> => {
+    // 1. Get all course IDs the student is registered in
+    const { data: studentCourses, error: coursesError } = await Database.from(
+      "student_courses",
+    )
+      .select("course_id")
+      .eq("student_id", studentId);
+
+    if (coursesError) throw coursesError;
+    if (!studentCourses || studentCourses.length === 0) {
+      return []; // no registered courses
+    }
+
+    const courseIds = studentCourses.map((sc) => sc.course_id);
+
+    // 2. Find any active sessions for those courses
+    const { data: activeSessions, error: sessionError } = await Database.from(
+      "class_sessions",
+    )
+      .select(
+        `
+      id,
+      course_id,
+      courses (course_code, title)
+    `,
+      )
+      .eq("status", "active")
+      .in("course_id", courseIds);
+
+    if (sessionError) throw sessionError;
+
+    return activeSessions || [];
+  },
 };

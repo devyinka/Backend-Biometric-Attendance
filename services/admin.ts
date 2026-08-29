@@ -1,4 +1,4 @@
-import { AdminDatabase } from "../config/database/connectdatabase";
+import { AdminDatabase, Database } from "../config/database/connectdatabase";
 import { resolveProfileImageUrl } from "./userService";
 
 export const AdminService = {
@@ -181,5 +181,92 @@ export const AdminService = {
       console.error("[UPDATE COURSE FATAL ERROR]:", error.message);
       throw error;
     }
+  },
+
+  getAttendanceOverview: async () => {
+    const { data, error } = await Database.rpc("get_admin_attendance_overview");
+    if (error) throw error;
+    return data;
+  },
+
+  // adminService.ts
+  getAttendanceRecords: async (courseId?: string) => {
+    let query = Database.from("class_sessions")
+      .select(
+        `
+        id,
+        course_id,
+        session_date,
+        status,
+        ended_at,
+        courses (course_code, title)
+      `,
+      )
+      .order("session_date", { ascending: false });
+
+    if (courseId) {
+      query = query.eq("course_id", courseId);
+    }
+
+    const { data: sessions, error: sessionsError } = await query;
+    if (sessionsError) throw sessionsError;
+    if (!sessions || sessions.length === 0) return [];
+
+    // 2. Extract course IDs for timetable lookup
+    const courseIds = [...new Set(sessions.map((s) => s.course_id))];
+
+    // 3. Fetch timetables for those courses
+    const { data: timetables, error: timetablesError } = await Database.from(
+      "timetables",
+    )
+      .select("course_id, start_time, end_time, venue")
+      .in("course_id", courseIds);
+
+    if (timetablesError) throw timetablesError;
+
+    // 4. Map timetable by course_id (first entry per course)
+    const timetableMap: Record<
+      string,
+      { start_time: string; end_time: string; venue: string }
+    > = {};
+    (timetables || []).forEach((t) => {
+      if (!timetableMap[t.course_id]) {
+        timetableMap[t.course_id] = {
+          start_time: t.start_time,
+          end_time: t.end_time,
+          venue: t.venue,
+        };
+      }
+    });
+
+    // 5. For each session, count present students
+    const records = await Promise.all(
+      sessions.map(async (session: any) => {
+        const { count: presentCount, error: countError } = await Database.from(
+          "attendance_logs",
+        )
+          .select("*", { count: "exact", head: true })
+          .eq("session_id", session.id)
+          .eq("status", "present");
+
+        if (countError) throw countError;
+
+        const course = session.courses?.[0] || {};
+        const timetable = timetableMap[session.course_id] || {};
+
+        return {
+          id: session.id,
+          course_code: course.course_code || "Unknown",
+          date: session.session_date,
+          start_time: timetable.start_time || "--:--",
+          end_time: timetable.end_time || "--:--",
+          venue: timetable.venue || "Main Auditorium",
+          present_count: presentCount || 0,
+          is_active: session.status === "active",
+        };
+      }),
+    );
+
+    return records;
   },
 };

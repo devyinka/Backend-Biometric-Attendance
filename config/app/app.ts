@@ -16,14 +16,8 @@ import registerRoute from "../../Routes/registerRoute";
 import sendEmailandPassword from "../../Routes/sendEmailandPassword";
 import updatePasswordRoute from "../../Routes/updatePassword";
 import kioskRoute from "../../Routes/kioskRoute";
-import {
-  getAllStudentsRoute,
-  getAllLecturerRoute,
-  getAllCoursesRoute,
-  createCourseRoute,
-  updateCourseSettingsRoute,
-  getAdminDashboardStatsRoute,
-} from "../../Routes/admin";
+import adminRoute from "../../Routes/admin";
+
 import courseRoute from "../../Routes/courseRoute";
 import studentRoute from "../../Routes/studentRoute";
 import classSessionRoute from "../../Routes/classSessionRoute";
@@ -102,11 +96,4 @@ app.use("/", requireLecturerorstudent, GetAttendanceHistory);
 app.use("/", requireLecturerorstudent, lecturerRouter);
 app.use("/", requireLecturerorstudent, getsemesterAttendanceHistory);
 
-app.use("/", requireAdmin, enrollmentRoute);
-app.use("/", requireAdmin, getAdminDashboardStatsRoute);
-app.use("/", requireAdmin, getAllStudentsRoute);
-app.use("/", requireAdmin, courseRoute);
-app.use("/", requireAdmin, getAllLecturerRoute);
-app.use("/", requireAdmin, getAllCoursesRoute);
-app.use("/", requireAdmin, createCourseRoute);
-app.use("/", requireAdmin, updateCourseSettingsRoute);
+app.use("/", requireAdmin, adminRoute);
