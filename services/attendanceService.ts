@@ -94,7 +94,8 @@ export const Attendance = {
       "class_sessions",
     )
       .select("id, started_at, ended_at")
-      .eq("course_id", courseId);
+      .eq("course_id", courseId)
+      .in("status", ["active", "closed"]);
 
     if (sessionError || !sessions || sessions.length === 0) {
       throw new Error(sessionError?.message);
@@ -120,7 +121,7 @@ export const Attendance = {
           continue;
         }
 
-        const { data: student } = await Database.from("biometrics")
+        const { data: student } = await AdminDatabase.from("biometrics")
           .select("student_id")
           .eq("fingerprint_slot", scan.slot)
           .single();
