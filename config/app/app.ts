@@ -89,10 +89,12 @@ app.use("/", kioskRoute);
 app.use("/", AttendanceRoute);
 
 // Apply authentication middleware globally for all routes after this point
+app.use("/", BlockchainRoute);
+
 app.use(requireAuth);
 app.use("/", updatePasswordRoute);
 app.use("/", BlockchainRoute);
-
+// blockchain is supposed to be here..     app.use("/", Blockchain
 // Aplly Role base acess for lecturer and student routes
 app.use("/", requireLecturerorstudent, courseRoute);
 app.use("/", requireLecturerorstudent, studentRoute);

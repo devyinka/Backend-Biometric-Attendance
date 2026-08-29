@@ -1,3 +1,4 @@
+import * as tf from '@tensorflow/tfjs-node';
 import * as faceapi from '@vladmandic/face-api';
 
 export const faceService = {
@@ -7,17 +8,16 @@ export const faceService = {
     await faceapi.nets.ssdMobilenetv1.loadFromDisk(modelPath);
     await faceapi.nets.faceLandmark68Net.loadFromDisk(modelPath);
     await faceapi.nets.faceRecognitionNet.loadFromDisk(modelPath);
+
+    console.log('Face detection models loaded successfully');
   },
 
   facedetection: async (imageBuffer: Buffer): Promise<number[]> => {
-    // TensorFlow is loaded ONLY when face detection is actually requested
-    const tf = await import('@tensorflow/tfjs-node');
-
-    const Tensor = tf.node.decodeImage(imageBuffer, 3) as any;
+    const imageTensor = tf.node.decodeImage(imageBuffer, 3) as tf.Tensor3D;
 
     try {
       const detection = await faceapi
-        .detectSingleFace(Tensor)
+        .detectSingleFace(imageTensor)
         .withFaceLandmarks()
         .withFaceDescriptor();
 
@@ -27,15 +27,23 @@ export const faceService = {
 
       return Array.from(detection.descriptor);
     } finally {
-      tf.dispose(Tensor);
+      imageTensor.dispose();
     }
   },
 
-  verifyFace: async (enrolledface: number[], detectedface: number[]): Promise<boolean> => {
+  verifyFace: async (
+    enrolledface: number[],
+    detectedface: number[],
+  ): Promise<boolean> => {
     const floatEnrolled = new Float32Array(enrolledface);
     const floatNew = new Float32Array(detectedface);
 
-    const distance = faceapi.euclideanDistance(floatEnrolled, floatNew);
+    const distance = faceapi.euclideanDistance(
+      floatEnrolled,
+      floatNew,
+    );
+
+    console.log('Face distance:', distance);
 
     return distance < 0.5;
   },
