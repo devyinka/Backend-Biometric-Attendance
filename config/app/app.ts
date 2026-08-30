@@ -86,8 +86,6 @@ app.use("/", AttendanceRoute);
 
 app.use(requireAuth);
 app.use("/", updatePasswordRoute);
-// blockchain is supposed to be here..     app.use("/", Blockchain
-// Aplly Role base acess for lecturer and student routes
 app.use("/", requireLecturerorstudent, courseRoute);
 app.use("/", requireLecturerorstudent, studentRoute);
 app.use("/", requireLecturerorstudent, BlockchainRoute);
