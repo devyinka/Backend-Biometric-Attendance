@@ -317,18 +317,30 @@ export const Attendance = {
             `Success! Offline attendance marked for slot ${scan.slot}`,
           );
           successCount++;
-        } catch (blockchainError) {
+        } catch (blockchainError: any) {
+          console.log("\n==================================================");
           console.error(
-            `Blockchain error for student ${student.student_id}:`,
-            blockchainError,
+            `🚨 BLOCKCHAIN ERROR FOR STUDENT: ${student.student_id}`,
           );
+          console.error(
+            "🚨 Error Message:",
+            blockchainError?.message || "No message",
+          );
+
+          if (blockchainError?.logs) {
+            console.error("🚨 Solana Program Logs:", blockchainError.logs);
+          } else {
+            console.error("🚨 Raw Error Object:", blockchainError);
+          }
+          console.log("==================================================\n");
+
           blockchainErrors++;
 
           await Database.from("attendance_logs").insert({
             student_id: student.student_id,
             session_id: targetSession.id,
             method: "fingerprint_offline",
-            tx_hash: null,
+            tx_hash: null, // Still save locally
           });
 
           successCount++;
