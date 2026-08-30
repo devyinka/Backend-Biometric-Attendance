@@ -86,13 +86,136 @@ export const Attendance = {
     };
   },
 
+  // markOfflineAttendance: async (
+  //   scans: { slot: number; timeStamp: string }[],
+  //   courseId: string,
+  // ) => {
+  //   console.log("Processing offline attendance scans for course:", courseId);
+  //   console.log("Total scans received:", scans.length);
+  //   console.log("Scan details:", scans);
+
+  //   const { data: sessions, error: sessionError } = await AdminDatabase.from(
+  //     "class_sessions",
+  //   )
+  //     .select("id, started_at, ended_at")
+  //     .eq("course_id", courseId)
+  //     .in("status", ["active", "closed"]);
+
+  //   if (sessionError || !sessions || sessions.length === 0) {
+  //     throw new Error(
+  //       sessionError?.message || "NO_ACTIVE_OR_CLOSED_SESSIONS_FOUND",
+  //     );
+  //   }
+  //   console.log(courseId, sessions);
+  //   let successCount = 0;
+  //   let duplicateCount = 0;
+  //   let failedCount = 0;
+  //   let blockchainErrors = 0;
+
+  //   for (const scan of scans) {
+  //     try {
+  //       const scanTime = new Date(scan.timeStamp).getTime();
+
+  //       const targetSession = sessions.find((s) => {
+  //         const start = new Date(s.started_at).getTime();
+  //         const end = s.ended_at ? new Date(s.ended_at).getTime() : Date.now();
+  //         return scanTime >= start && scanTime <= end;
+  //       });
+
+  //       if (!targetSession) {
+  //         failedCount++;
+  //         continue;
+  //       }
+
+  //       const { data: student, error: studentError } = await AdminDatabase.from(
+  //         "biometrics",
+  //       )
+  //         .select("student_id")
+  //         .eq("fingerprint_slot", scan.slot)
+  //         .maybeSingle();
+
+  //       if (studentError || !student) {
+  //         console.warn(
+  //           `Student not found for slot ${scan.slot}:`,
+  //           studentError,
+  //         );
+  //         failedCount++;
+  //         continue;
+  //       }
+
+  //       const { data: existingLog } = await Database.from("attendance_logs")
+  //         .select("id")
+  //         .eq("student_id", student.student_id)
+  //         .eq("session_id", targetSession.id)
+  //         .maybeSingle();
+
+  //       if (existingLog) {
+  //         duplicateCount++;
+  //         continue;
+  //       }
+
+  //       try {
+  //         const txHash = await SolanaBlockchainGateway.recordAttendanceHash(
+  //           student.student_id,
+  //           targetSession.id,
+  //           "fingerprint_offline",
+  //         );
+
+  //         await Database.from("attendance_logs").insert({
+  //           student_id: student.student_id,
+  //           session_id: targetSession.id,
+  //           method: "fingerprint_offline",
+  //           tx_hash: txHash,
+  //         });
+
+  //         successCount++;
+  //       } catch (blockchainError) {
+  //         console.error(
+  //           `Blockchain error for student ${student.student_id}:`,
+  //           blockchainError,
+  //         );
+  //         blockchainErrors++;
+
+  //         await Database.from("attendance_logs").insert({
+  //           student_id: student.student_id,
+  //           session_id: targetSession.id,
+  //           method: "fingerprint_offline",
+  //           tx_hash: null,
+  //         });
+
+  //         successCount++;
+  //       }
+  //     } catch (err) {
+  //       console.error(
+  //         `Error processing offline scan for slot ${scan.slot}:`,
+  //         err,
+  //       );
+  //       failedCount++;
+  //     }
+  //   }
+
+  //   return {
+  //     status: "success",
+  //     message: "Offline batch processing complete",
+  //     stats: {
+  //       totalReceived: scans.length,
+  //       successful: successCount,
+  //       duplicatesIgnored: duplicateCount,
+  //       failed: failedCount,
+  //       blockchainSyncErrors: blockchainErrors,
+  //     },
+  //     note:
+  //       blockchainErrors > 0
+  //         ? "Some records were saved locally. Blockchain sync is pending."
+  //         : "All records were recorded on Solana.",
+  //   };
+  // },
+
   markOfflineAttendance: async (
     scans: { slot: number; timeStamp: string }[],
     courseId: string,
   ) => {
     console.log("Processing offline attendance scans for course:", courseId);
-    console.log("Total scans received:", scans.length);
-    console.log("Scan details:", scans);
 
     const { data: sessions, error: sessionError } = await AdminDatabase.from(
       "class_sessions",
@@ -106,7 +229,13 @@ export const Attendance = {
         sessionError?.message || "NO_ACTIVE_OR_CLOSED_SESSIONS_FOUND",
       );
     }
-    console.log(courseId, sessions);
+
+    // Sort sessions from newest to oldest
+    sessions.sort(
+      (a, b) =>
+        new Date(b.started_at).getTime() - new Date(a.started_at).getTime(),
+    );
+
     let successCount = 0;
     let duplicateCount = 0;
     let failedCount = 0;
@@ -116,17 +245,29 @@ export const Attendance = {
       try {
         const scanTime = new Date(scan.timeStamp).getTime();
 
-        const targetSession = sessions.find((s) => {
+        //  Try to find the exact session window first
+        let targetSession = sessions.find((s) => {
           const start = new Date(s.started_at).getTime();
           const end = s.ended_at ? new Date(s.ended_at).getTime() : Date.now();
           return scanTime >= start && scanTime <= end;
         });
 
         if (!targetSession) {
+          console.warn(
+            `Scan time ${scan.timeStamp} missed strict window. Falling back to most recent session.`,
+          );
+          targetSession = sessions[0];
+        }
+
+        if (!targetSession) {
+          console.error(
+            `Failed: No valid session found for course ${courseId}`,
+          );
           failedCount++;
           continue;
         }
 
+        //  Verify the fingerprint slot exists
         const { data: student, error: studentError } = await AdminDatabase.from(
           "biometrics",
         )
@@ -135,14 +276,14 @@ export const Attendance = {
           .maybeSingle();
 
         if (studentError || !student) {
-          console.warn(
-            `Student not found for slot ${scan.slot}:`,
-            studentError,
+          console.error(
+            `FAILED: No student found in database for fingerprint slot [${scan.slot}]`,
           );
           failedCount++;
           continue;
         }
 
+        //  Check for duplicates
         const { data: existingLog } = await Database.from("attendance_logs")
           .select("id")
           .eq("student_id", student.student_id)
@@ -150,10 +291,14 @@ export const Attendance = {
           .maybeSingle();
 
         if (existingLog) {
+          console.log(
+            `Duplicate found for student ${student.student_id}. Ignoring.`,
+          );
           duplicateCount++;
           continue;
         }
 
+        //  Save to Solana and Database
         try {
           const txHash = await SolanaBlockchainGateway.recordAttendanceHash(
             student.student_id,
@@ -168,6 +313,9 @@ export const Attendance = {
             tx_hash: txHash,
           });
 
+          console.log(
+            `Success! Offline attendance marked for slot ${scan.slot}`,
+          );
           successCount++;
         } catch (blockchainError) {
           console.error(
