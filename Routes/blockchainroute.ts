@@ -8,20 +8,12 @@ import {
 const BlockchainRoute = Router();
 
 // Verify an existing Solana transaction
-BlockchainRoute.post(
-  "/verifyTransaction/:signature",
-  verifyTransactionOnSolana,
-);
+BlockchainRoute.get("/verifyTransaction/:signature", verifyTransactionOnSolana);
 
 // TEMPORARY: Direct blockchain integration test
-BlockchainRoute.post(
-  "/test-attendance",
-  testAttendanceBlockchain,
-);
+BlockchainRoute.post("/test-attendance", testAttendanceBlockchain);
 
 export default BlockchainRoute;
-
-
 
 /*
 import { Router } from "express";

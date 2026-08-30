@@ -66,7 +66,7 @@ export const Attendance = {
       method,
     );
 
-    await Database.from("attendance_logs").insert({
+    await AdminDatabase.from("attendance_logs").insert({
       student_id: student.student_id,
       session_id: session.id,
       method: method,
