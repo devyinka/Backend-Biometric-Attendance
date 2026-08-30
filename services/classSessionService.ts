@@ -13,8 +13,8 @@ export const SessionService = {
       throw new Error("Kiosk is currently offline. Please check connection.");
     }
 
-    const startDateTime = new Date(`${date}T${startTime}:00Z`);
-    const endDateTime = new Date(`${date}T${endTime}:00Z`);
+    const startDateTime = new Date(`${date}T${startTime}:00+01:00`);
+    const endDateTime = new Date(`${date}T${endTime}:00+01:00`);
 
     const { data: session, error } = await Database.from("class_sessions")
       .insert([
