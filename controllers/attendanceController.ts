@@ -44,6 +44,35 @@ export const markLiveAttendance = async (
     res.status(status).json({ error: message });
   }
 };
+// export const markOfflineAttendance = async (
+//   req: Request,
+//   res: Response,
+// ): Promise<void> => {
+//   try {
+//     const { scans, courseId } = req.body;
+
+//     console.log("Received request to mark offline attendance:", {
+//       scans,
+//       courseId,
+//     });
+//     if (!courseId) {
+//       res.status(400).json({ error: "Missing courseId" });
+//       return;
+//     }
+//     if (!Array.isArray(scans) || scans.length === 0) {
+//       res.status(400).json({ error: "Scans must be a non-empty array" });
+//       return;
+//     }
+
+//     const result = await Attendance.markOfflineAttendance(scans, courseId);
+//     console.log("Offline attendance marking result:", result);
+//     res.status(200).json(result);
+//   } catch (error: any) {
+//     console.error("Error marking offline attendance:", error);
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
 export const markOfflineAttendance = async (
   req: Request,
   res: Response,
@@ -55,6 +84,7 @@ export const markOfflineAttendance = async (
       scans,
       courseId,
     });
+
     if (!courseId) {
       res.status(400).json({ error: "Missing courseId" });
       return;
@@ -66,6 +96,15 @@ export const markOfflineAttendance = async (
 
     const result = await Attendance.markOfflineAttendance(scans, courseId);
     console.log("Offline attendance marking result:", result);
+
+    // Log blockchain error details if any
+    if (result.blockchainErrorDetails?.length) {
+      console.error(
+        "🔗 Blockchain error details:",
+        result.blockchainErrorDetails,
+      );
+    }
+
     res.status(200).json(result);
   } catch (error: any) {
     console.error("Error marking offline attendance:", error);

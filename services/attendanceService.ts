@@ -240,12 +240,12 @@ export const Attendance = {
     let duplicateCount = 0;
     let failedCount = 0;
     let blockchainErrors = 0;
+    const blockchainErrorDetails: string[] = []; // <<< CHANGED
 
     for (const scan of scans) {
       try {
         const scanTime = new Date(scan.timeStamp).getTime();
 
-        //  Try to find the exact session window first
         let targetSession = sessions.find((s) => {
           const start = new Date(s.started_at).getTime();
           const end = s.ended_at ? new Date(s.ended_at).getTime() : Date.now();
@@ -267,7 +267,6 @@ export const Attendance = {
           continue;
         }
 
-        //  Verify the fingerprint slot exists
         const { data: student, error: studentError } = await AdminDatabase.from(
           "biometrics",
         )
@@ -283,7 +282,6 @@ export const Attendance = {
           continue;
         }
 
-        //  Check for duplicates
         const { data: existingLog } = await AdminDatabase.from(
           "attendance_logs",
         )
@@ -300,7 +298,6 @@ export const Attendance = {
           continue;
         }
 
-        //  Save to Solana and Database
         try {
           const txHash = await SolanaBlockchainGateway.recordAttendanceHash(
             student.student_id,
@@ -320,19 +317,20 @@ export const Attendance = {
           );
           successCount++;
         } catch (blockchainError: any) {
+          const errorMsg =
+            blockchainError?.message || "Unknown blockchain error";
+          blockchainErrorDetails.push(`Slot ${scan.slot}: ${errorMsg}`);
+
           console.log("\n==================================================");
           console.error(
             `🚨 BLOCKCHAIN ERROR FOR STUDENT: ${student.student_id}`,
           );
-          console.error(
-            "🚨 Error Message:",
-            blockchainError?.message || "No message",
-          );
+          console.error("🚨 Error Message:", errorMsg);
 
           if (blockchainError?.logs) {
-            console.error("🚨 Solana Program Logs:", blockchainError.logs);
+            console.error(" Solana Program Logs:", blockchainError.logs);
           } else {
-            console.error("🚨 Raw Error Object:", blockchainError);
+            console.error("Raw Error Object:", blockchainError);
           }
           console.log("==================================================\n");
 
@@ -342,7 +340,7 @@ export const Attendance = {
             student_id: student.student_id,
             session_id: targetSession.id,
             method: "fingerprint_offline",
-            tx_hash: null, // Still save locally
+            tx_hash: null,
           });
 
           successCount++;
@@ -370,6 +368,7 @@ export const Attendance = {
         blockchainErrors > 0
           ? "Some records were saved locally. Blockchain sync is pending."
           : "All records were recorded on Solana.",
+      blockchainErrorDetails, // <<< CHANGED – added to response
     };
   },
 
