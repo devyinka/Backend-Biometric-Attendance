@@ -284,7 +284,9 @@ export const Attendance = {
         }
 
         //  Check for duplicates
-        const { data: existingLog } = await Database.from("attendance_logs")
+        const { data: existingLog } = await AdminDatabase.from(
+          "attendance_logs",
+        )
           .select("id")
           .eq("student_id", student.student_id)
           .eq("session_id", targetSession.id)
@@ -306,7 +308,7 @@ export const Attendance = {
             "fingerprint_offline",
           );
 
-          await Database.from("attendance_logs").insert({
+          await AdminDatabase.from("attendance_logs").insert({
             student_id: student.student_id,
             session_id: targetSession.id,
             method: "fingerprint_offline",
@@ -336,7 +338,7 @@ export const Attendance = {
 
           blockchainErrors++;
 
-          await Database.from("attendance_logs").insert({
+          await AdminDatabase.from("attendance_logs").insert({
             student_id: student.student_id,
             session_id: targetSession.id,
             method: "fingerprint_offline",
